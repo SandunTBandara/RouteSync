@@ -12,6 +12,8 @@ const errorHandler = require("./middleware/errorHandler");
 const logger = require("./utils/logger");
 
 // Route imports
+const authRoutes = require("./routes/authRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 const busRoutes = require("./routes/busRoutes");
 const routeRoutes = require("./routes/routeRoutes");
 const locationRoutes = require("./routes/locationRoutes");
@@ -53,6 +55,8 @@ app.get("/health", (req, res) => {
 });
 
 // API routes
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/buses", busRoutes);
 app.use("/api/v1/routes", routeRoutes);
 app.use("/api/v1/locations", locationRoutes);

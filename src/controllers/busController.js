@@ -1,5 +1,4 @@
-const Bus = require("../models/Bus");
-const Location = require("../models/Location");
+const busService = require("../services/busService");
 const logger = require("../utils/logger");
 
 /**
@@ -9,30 +8,25 @@ const logger = require("../utils/logger");
  */
 const getAllBuses = async (req, res) => {
   try {
-    const { page = 1, limit = 20, status, routeId } = req.query;
-
-    const filter = {};
-    if (status) filter.status = status;
-    if (routeId) filter.routeId = routeId;
-
-    const buses = await Bus.find(filter)
-      .populate("routeId", "routeNumber origin destination")
-      .populate("operatorId", "name contactInfo")
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .sort({ lastUpdated: -1 });
-
-    const totalBuses = await Bus.countDocuments(filter);
+    const result = await busService.getAllBuses(req.query, req.user);
 
     res.status(200).json({
       success: true,
-      count: buses.length,
-      totalPages: Math.ceil(totalBuses / limit),
-      currentPage: page,
-      data: buses,
+      count: result.buses.length,
+      totalPages: result.pagination.totalPages,
+      currentPage: result.pagination.currentPage,
+      data: result.buses,
     });
   } catch (error) {
     logger.error("Error fetching buses:", error);
+
+    if (error.message === "Unauthorized access") {
+      return res.status(403).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: "Server Error",
@@ -58,37 +52,15 @@ const updateBusLocation = async (req, res) => {
       });
     }
 
-    // Update bus current location
-    const bus = await Bus.findByIdAndUpdate(
-      id,
-      {
-        currentLocation: {
-          type: "Point",
-          coordinates: [longitude, latitude],
-        },
-        lastUpdated: new Date(),
-      },
-      { new: true, runValidators: true }
-    );
+    const locationData = {
+      latitude,
+      longitude,
+      timestamp,
+      speed,
+      heading,
+    };
 
-    if (!bus) {
-      return res.status(404).json({
-        success: false,
-        message: "Bus not found",
-      });
-    }
-
-    // Store location history
-    await Location.create({
-      busId: id,
-      location: {
-        type: "Point",
-        coordinates: [longitude, latitude],
-      },
-      timestamp: timestamp || new Date(),
-      speed: speed || 0,
-      heading: heading || 0,
-    });
+    const bus = await busService.updateBusLocation(id, locationData, req.user);
 
     res.status(200).json({
       success: true,
@@ -96,6 +68,24 @@ const updateBusLocation = async (req, res) => {
     });
   } catch (error) {
     logger.error("Error updating bus location:", error);
+
+    if (error.message === "Bus not found") {
+      return res.status(404).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    if (
+      error.message === "Unauthorized access" ||
+      error.message.includes("not authorized to update")
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: "Server Error",

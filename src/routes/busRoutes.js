@@ -3,6 +3,12 @@ const {
   getAllBuses,
   updateBusLocation,
 } = require("../controllers/busController");
+const {
+  protect,
+  authorize,
+  optionalAuth,
+  checkBusAccess,
+} = require("../middleware/auth");
 const router = express.Router();
 
 /**
@@ -106,7 +112,8 @@ const router = express.Router();
  *                   items:
  *                     $ref: '#/components/schemas/Bus'
  */
-router.get("/", getAllBuses);
+// Public endpoint with optional authentication for enhanced data
+router.get("/", optionalAuth, getAllBuses);
 
 /**
  * @swagger
@@ -157,6 +164,13 @@ router.get("/", getAllBuses);
  *       404:
  *         description: Bus not found
  */
-router.put("/:id/location", updateBusLocation);
+// Driver or admin can update bus location
+router.put(
+  "/:id/location",
+  protect,
+  authorize("driver", "admin"),
+  checkBusAccess,
+  updateBusLocation
+);
 
 module.exports = router;
