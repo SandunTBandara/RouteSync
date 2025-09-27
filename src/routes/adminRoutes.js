@@ -2,6 +2,7 @@ const express = require("express");
 const {
   getAllUsers,
   getUserById,
+  createAdmin,
   createUser,
   updateUser,
   deleteUser,
@@ -79,7 +80,7 @@ router.get("/users/stats", getUserStats);
  *         name: role
  *         schema:
  *           type: string
- *           enum: [admin, operator, driver, user]
+ *           enum: [admin, user]
  *         description: Filter by role
  *       - in: query
  *         name: isActive
@@ -113,6 +114,111 @@ router.get("/users/stats", getUserStats);
  *                     $ref: '#/components/schemas/User'
  */
 router.get("/users", getAllUsers);
+
+/**
+ * @swagger
+ * /api/v1/admin/create-admin:
+ *   post:
+ *     summary: Create a new admin user (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - email
+ *               - password
+ *               - firstName
+ *               - lastName
+ *               - phone
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: Unique username for the admin
+ *                 example: "admin_john"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Admin email address
+ *                 example: "john.admin@company.com"
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *                 description: Strong password for the admin
+ *                 example: "AdminPass123"
+ *               firstName:
+ *                 type: string
+ *                 description: Admin first name
+ *                 example: "John"
+ *               lastName:
+ *                 type: string
+ *                 description: Admin last name
+ *                 example: "Doe"
+ *               phone:
+ *                 type: string
+ *                 description: Admin phone number
+ *                 example: "+94771234567"
+ *     responses:
+ *       201:
+ *         description: Admin created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Admin created successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     firstName:
+ *                       type: string
+ *                     lastName:
+ *                       type: string
+ *                     phone:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                       example: "admin"
+ *                     isActive:
+ *                       type: boolean
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Validation error or user already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "User with this email or username already exists"
+ *       403:
+ *         description: Access denied - Admin role required
+ *       500:
+ *         description: Server error
+ */
+router.post("/create-admin", validateRegister, createAdmin);
 
 /**
  * @swagger
@@ -204,8 +310,7 @@ router.get("/users/:id", getUserById);
  *                 type: string
  *               role:
  *                 type: string
- *                 enum: [admin, operator, driver, user]
- *               operatorId:
+ *                 enum: [admin, user]
  *                 type: string
  *               assignedBusId:
  *                 type: string

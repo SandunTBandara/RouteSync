@@ -79,7 +79,6 @@ class LocationService {
           "route.routeNumber": 1,
           "route.origin": 1,
           "route.destination": 1,
-          "operator.name": 1,
         },
       },
       { $limit: limit },
@@ -102,18 +101,6 @@ class LocationService {
           "Access denied. You can only access your assigned bus location."
         );
       }
-
-      if (user.role === "operator") {
-        const bus = await Bus.findOne({
-          _id: busId,
-          operatorId: user.operatorId,
-        });
-        if (!bus) {
-          throw new Error(
-            "Access denied. Bus not found in your operator fleet."
-          );
-        }
-      }
     }
 
     const location = await Location.findOne({ busId })
@@ -125,10 +112,6 @@ class LocationService {
           {
             path: "routeId",
             select: "routeNumber origin destination",
-          },
-          {
-            path: "operatorId",
-            select: "name",
           },
         ],
       });
@@ -172,14 +155,6 @@ class LocationService {
         throw new Error(
           "Access denied. You can only update your assigned bus location."
         );
-      }
-    } else if (user.role === "operator") {
-      const bus = await Bus.findOne({
-        _id: busId,
-        operatorId: user.operatorId,
-      });
-      if (!bus) {
-        throw new Error("Access denied. Bus not found in your operator fleet.");
       }
     }
 

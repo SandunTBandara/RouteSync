@@ -1,5 +1,4 @@
 const User = require("../models/User");
-const Operator = require("../models/Operator");
 const logger = require("../utils/logger");
 
 class UserService {
@@ -24,17 +23,7 @@ class UserService {
       lastName,
       phone,
       role = "user",
-      operatorId,
-      assignedBusId,
     } = userData;
-
-    // Validate operator for operator/driver roles
-    if ((role === "operator" || role === "driver") && operatorId) {
-      const operator = await Operator.findById(operatorId);
-      if (!operator || !operator.isActive) {
-        throw new Error("Invalid or inactive operator");
-      }
-    }
 
     // Create user
     const user = await User.create({
@@ -45,9 +34,6 @@ class UserService {
       lastName,
       phone,
       role,
-      operatorId:
-        role === "operator" || role === "driver" ? operatorId : undefined,
-      assignedBusId: role === "driver" ? assignedBusId : undefined,
     });
 
     logger.info(`New user created: ${user.email} with role: ${user.role}`);
@@ -56,7 +42,7 @@ class UserService {
 
   /**
    * Authenticate user with login credentials
-   */
+   **/
   async authenticateUser(login, password) {
     // Find user by email or username
     const user = await User.findOne({
@@ -146,9 +132,10 @@ class UserService {
    * Get user profile by ID
    */
   async getUserProfile(userId) {
-    const user = await User.findById(userId)
-      .populate("operatorId", "name registrationNumber")
-      .populate("assignedBusId", "busNumber routeId");
+    const user = await User.findById(userId).populate(
+      "assignedBusId",
+      "busNumber routeId"
+    );
 
     if (!user) {
       throw new Error("User not found");
@@ -233,8 +220,6 @@ class UserService {
     }
 
     const users = await User.find(filter)
-      .populate("operatorId", "name registrationNumber")
-      .populate("assignedBusId", "busNumber routeId")
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort({ createdAt: -1 });
@@ -256,9 +241,10 @@ class UserService {
    * Get user by ID (Admin function)
    */
   async getUserById(userId) {
-    const user = await User.findById(userId)
-      .populate("operatorId", "name registrationNumber contactInfo")
-      .populate("assignedBusId", "busNumber routeId");
+    const user = await User.findById(userId).populate(
+      "assignedBusId",
+      "busNumber routeId"
+    );
 
     if (!user) {
       throw new Error("User not found");
@@ -271,27 +257,12 @@ class UserService {
    * Update user by admin
    */
   async updateUserByAdmin(userId, updateData, adminUserId) {
-    const {
-      firstName,
-      lastName,
-      phone,
-      role,
-      operatorId,
-      assignedBusId,
-      isActive,
-    } = updateData;
+    const { firstName, lastName, phone, role, assignedBusId, isActive } =
+      updateData;
 
     const user = await User.findById(userId);
     if (!user) {
       throw new Error("User not found");
-    }
-
-    // Validate operator for operator/driver roles
-    if ((role === "operator" || role === "driver") && operatorId) {
-      const operator = await Operator.findById(operatorId);
-      if (!operator || !operator.isActive) {
-        throw new Error("Invalid or inactive operator");
-      }
     }
 
     // Update user
@@ -302,9 +273,7 @@ class UserService {
         lastName,
         phone,
         role,
-        operatorId:
-          role === "operator" || role === "driver" ? operatorId : undefined,
-        assignedBusId: role === "driver" ? assignedBusId : undefined,
+        assignedBusId,
         isActive,
       },
       { new: true, runValidators: true }

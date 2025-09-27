@@ -1,5 +1,4 @@
 const userService = require("../services/userService");
-const operatorService = require("../services/operatorService");
 const logger = require("../utils/logger");
 const { validationResult } = require("express-validator");
 
@@ -59,6 +58,63 @@ const getUserById = async (req, res) => {
 };
 
 /**
+ * @desc    Create admin user (Super Admin only)
+ * @route   POST /api/v1/admin/create-admin
+ * @access  Private/Admin
+ */
+const createAdmin = async (req, res) => {
+  try {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: errors.array(),
+      });
+    }
+
+    // Force role to be admin
+    const adminData = {
+      ...req.body,
+      role: "admin",
+    };
+
+    const admin = await userService.createUser(adminData);
+
+    res.status(201).json({
+      success: true,
+      message: "Admin created successfully",
+      data: {
+        _id: admin._id,
+        username: admin.username,
+        email: admin.email,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        phone: admin.phone,
+        role: admin.role,
+        isActive: admin.isActive,
+        createdAt: admin.createdAt,
+      },
+    });
+  } catch (error) {
+    logger.error("Error creating admin:", error);
+
+    if (error.message === "User with this email or username already exists") {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Server error creating admin",
+    });
+  }
+};
+
+/**
  * @desc    Create user (Admin only)
  * @route   POST /api/v1/admin/users
  * @access  Private/Admin
@@ -85,10 +141,7 @@ const createUser = async (req, res) => {
   } catch (error) {
     logger.error("Error creating user:", error);
 
-    if (
-      error.message === "User with this email or username already exists" ||
-      error.message === "Invalid or inactive operator"
-    ) {
+    if (error.message === "User with this email or username already exists") {
       return res.status(400).json({
         success: false,
         message: error.message,
@@ -131,13 +184,6 @@ const updateUser = async (req, res) => {
 
     if (error.message === "User not found") {
       return res.status(404).json({
-        success: false,
-        message: error.message,
-      });
-    }
-
-    if (error.message === "Invalid or inactive operator") {
-      return res.status(400).json({
         success: false,
         message: error.message,
       });
@@ -212,6 +258,7 @@ const getUserStats = async (req, res) => {
 module.exports = {
   getAllUsers,
   getUserById,
+  createAdmin,
   createUser,
   updateUser,
   deleteUser,

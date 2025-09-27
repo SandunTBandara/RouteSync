@@ -60,8 +60,7 @@ class RouteService {
 
     // Get buses on this route
     const buses = await Bus.find({ routeId, status: "active" })
-      .populate("operatorId", "name")
-      .select("busNumber busType currentLocation lastUpdated");
+    .select("busNumber busType currentLocation lastUpdated");
 
     return {
       route,
@@ -321,8 +320,7 @@ class RouteService {
     }
 
     const buses = await Bus.find({ routeId, status: "active" })
-      .populate("operatorId", "name contactInfo")
-      .sort({ lastUpdated: -1 });
+    .sort({ lastUpdated: -1 });
 
     return {
       route,
