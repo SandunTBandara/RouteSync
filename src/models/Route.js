@@ -24,17 +24,17 @@ const routeSchema = new mongoose.Schema(
             enum: ["Point"],
             default: "Point",
           },
-          coordinates: [Number], // [longitude, latitude]
+          coordinates: [Number],
         },
-        estimatedTime: Number, // minutes from origin
+        estimatedTime: Number,
       },
     ],
     distance: {
-      type: Number, // in kilometers
+      type: Number,
       required: true,
     },
     estimatedDuration: {
-      type: Number, // in minutes
+      type: Number,
       required: true,
     },
     isActive: {

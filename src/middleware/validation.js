@@ -42,12 +42,8 @@ const validateRegister = [
 
   body("role")
     .optional()
-    .isIn(["admin", "operator", "driver", "user"])
-    .withMessage("Role must be one of: admin, operator, driver, user"),
-
-  body("operatorId").optional().isMongoId().withMessage("Invalid operator ID"),
-
-  body("assignedBusId").optional().isMongoId().withMessage("Invalid bus ID"),
+    .isIn(["admin", "user"])
+    .withMessage("Role must be one of: admin, user"),
 ];
 
 /**
@@ -113,50 +109,6 @@ const validateRefreshToken = [
 ];
 
 /**
- * Validation for operator creation
- */
-const validateOperator = [
-  body("name")
-    .trim()
-    .isLength({ min: 1, max: 100 })
-    .withMessage("Operator name is required and cannot exceed 100 characters"),
-
-  body("registrationNumber")
-    .trim()
-    .isLength({ min: 1 })
-    .withMessage("Registration number is required"),
-
-  body("contactInfo.phone")
-    .matches(/^\+94\d{9}$/)
-    .withMessage("Please provide a valid Sri Lankan phone number"),
-
-  body("contactInfo.email")
-    .optional()
-    .isEmail()
-    .normalizeEmail()
-    .withMessage("Please provide a valid email address"),
-
-  body("licenseInfo.licenseNumber")
-    .trim()
-    .isLength({ min: 1 })
-    .withMessage("License number is required"),
-
-  body("licenseInfo.issueDate")
-    .isISO8601()
-    .withMessage("Please provide a valid issue date"),
-
-  body("licenseInfo.expiryDate")
-    .isISO8601()
-    .withMessage("Please provide a valid expiry date")
-    .custom((value, { req }) => {
-      if (new Date(value) <= new Date(req.body.licenseInfo.issueDate)) {
-        throw new Error("Expiry date must be after issue date");
-      }
-      return true;
-    }),
-];
-
-/**
  * Validation for location update
  */
 const validateLocationUpdate = [
@@ -184,12 +136,80 @@ const validateLocationUpdate = [
     .withMessage("Accuracy must be a positive number"),
 ];
 
+/**
+ * Validation for bus creation
+ */
+const validateBus = [
+  body("busId")
+    .not()
+    .exists()
+    .withMessage("busId is auto-generated and should not be provided"),
+
+  body("busNumber")
+    .trim()
+    .isLength({ min: 1, max: 20 })
+    .withMessage("Bus number is required and cannot exceed 20 characters")
+    .matches(/^[A-Z0-9-]+$/)
+    .withMessage(
+      "Bus number can only contain uppercase letters, numbers, and hyphens"
+    ),
+
+  body("routeId").isMongoId().withMessage("Invalid route ID"),
+
+  body("capacity")
+    .isInt({ min: 1, max: 100 })
+    .withMessage("Capacity must be between 1 and 100 passengers"),
+
+  body("busType")
+    .isIn(["Normal", "Semi Luxury", "Luxury", "Super Luxury"])
+    .withMessage(
+      "Bus type must be one of: Normal, Semi Luxury, Luxury, Super Luxury"
+    ),
+];
+
+/**
+ * Validation for bus updates
+ */
+const validateBusUpdate = [
+  body("busId").not().exists().withMessage("busId cannot be modified"),
+
+  body("busNumber")
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 20 })
+    .withMessage("Bus number cannot exceed 20 characters")
+    .matches(/^[A-Z0-9-]+$/)
+    .withMessage(
+      "Bus number can only contain uppercase letters, numbers, and hyphens"
+    ),
+
+  body("routeId").optional().isMongoId().withMessage("Invalid route ID"),
+
+  body("capacity")
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage("Capacity must be between 1 and 100 passengers"),
+
+  body("busType")
+    .optional()
+    .isIn(["Normal", "Semi Luxury", "Luxury", "Super Luxury"])
+    .withMessage(
+      "Bus type must be one of: Normal, Semi Luxury, Luxury, Super Luxury"
+    ),
+
+  body("status")
+    .optional()
+    .isIn(["active", "inactive", "maintenance"])
+    .withMessage("Status must be one of: active, inactive, maintenance"),
+];
+
 module.exports = {
   validateRegister,
   validateLogin,
   validateProfileUpdate,
   validatePasswordChange,
   validateRefreshToken,
-  validateOperator,
   validateLocationUpdate,
+  validateBus,
+  validateBusUpdate,
 };

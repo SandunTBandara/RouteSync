@@ -51,25 +51,12 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: {
-        values: ["admin", "operator", "driver", "user"],
-        message: "Role must be one of: admin, operator, driver, user",
+        values: ["admin", "user"],
+        message: "Role must be one of: admin, user",
       },
       default: "user",
     },
-    operatorId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Operator",
-      required: function () {
-        return this.role === "operator" || this.role === "driver";
-      },
-    },
-    assignedBusId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Bus",
-      required: function () {
-        return this.role === "driver";
-      },
-    },
+
     isActive: {
       type: Boolean,
       default: true,
@@ -121,8 +108,6 @@ userSchema.methods.generateAccessToken = function () {
       username: this.username,
       email: this.email,
       role: this.role,
-      operatorId: this.operatorId,
-      assignedBusId: this.assignedBusId,
     },
     process.env.JWT_SECRET,
     {

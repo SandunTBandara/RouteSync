@@ -97,85 +97,20 @@ const authorize = (...roles) => {
 };
 
 /**
- * Check if user can access specific operator resources
- */
-const checkOperatorAccess = async (req, res, next) => {
-  try {
-    const { operatorId } = req.params;
-    const user = req.user;
-
-    // Admin can access all operators
-    if (user.role === "admin") {
-      return next();
-    }
-
-    // Operator can only access their own resources
-    if (user.role === "operator" && user.operatorId.toString() === operatorId) {
-      return next();
-    }
-
-    // Driver can only access their operator's resources
-    if (user.role === "driver" && user.operatorId.toString() === operatorId) {
-      return next();
-    }
-
-    return res.status(403).json({
-      success: false,
-      message: "Access denied. You can only access your operator's resources.",
-    });
-  } catch (error) {
-    logger.error("Operator access check error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error in access control.",
-    });
-  }
-};
-
-/**
  * Check if user can access specific bus resources
  */
 const checkBusAccess = async (req, res, next) => {
   try {
-    const { busId } = req.params;
     const user = req.user;
 
-    // Admin can access all buses
+    // Only admin can access bus resources
     if (user.role === "admin") {
-      return next();
-    }
-
-    // For operators and drivers, we need to check if the bus belongs to their operator
-    const Bus = require("../models/Bus");
-    const bus = await Bus.findById(busId);
-
-    if (!bus) {
-      return res.status(404).json({
-        success: false,
-        message: "Bus not found.",
-      });
-    }
-
-    // Operator can access buses from their company
-    if (
-      user.role === "operator" &&
-      bus.operatorId.toString() === user.operatorId.toString()
-    ) {
-      return next();
-    }
-
-    // Driver can only access their assigned bus
-    if (
-      user.role === "driver" &&
-      user.assignedBusId &&
-      user.assignedBusId.toString() === busId
-    ) {
       return next();
     }
 
     return res.status(403).json({
       success: false,
-      message: "Access denied. You can only access authorized buses.",
+      message: "Access denied. Admin role required.",
     });
   } catch (error) {
     logger.error("Bus access check error:", error);
@@ -224,7 +159,6 @@ const optionalAuth = async (req, res, next) => {
 module.exports = {
   protect,
   authorize,
-  checkOperatorAccess,
   checkBusAccess,
   optionalAuth,
 };

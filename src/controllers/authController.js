@@ -55,7 +55,6 @@ const register = async (req, res) => {
     logger.error("Registration error:", error);
 
     if (
-      error.message.includes("Invalid or inactive operator") ||
       error.message.includes("User with this email or username already exists")
     ) {
       return res.status(400).json({

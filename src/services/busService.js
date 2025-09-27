@@ -13,18 +13,13 @@ class BusService {
     if (status) filter.status = status;
     if (routeId) filter.routeId = routeId;
 
-    // Apply operator-specific filtering for non-admin users
-    if (user) {
-      if (user.role === "operator") {
-        filter.operatorId = user.operatorId;
-      } else if (user.role === "driver" && user.assignedBusId) {
-        filter._id = user.assignedBusId;
-      }
+    // Apply user-specific filtering for non-admin users
+    if (user && user.assignedBusId) {
+      filter._id = user.assignedBusId;
     }
 
     const buses = await Bus.find(filter)
       .populate("routeId", "routeNumber origin destination")
-      .populate("operatorId", "name contactInfo")
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort({ lastUpdated: -1 });
@@ -43,27 +38,53 @@ class BusService {
   }
 
   /**
-   * Get bus by ID
+   * Get bus by MongoDB ID
    */
   async getBusById(busId, user = null) {
     let filter = { _id: busId };
 
-    // Apply access control
-    if (user) {
-      if (user.role === "operator") {
-        filter.operatorId = user.operatorId;
-      } else if (user.role === "driver" && user.assignedBusId) {
-        if (user.assignedBusId.toString() !== busId) {
-          throw new Error(
-            "Access denied. You can only access your assigned bus."
-          );
-        }
+    // Apply access control for regular users
+    if (user && user.role !== "admin" && user.assignedBusId) {
+      if (user.assignedBusId.toString() !== busId) {
+        throw new Error(
+          "Access denied. You can only access your assigned bus."
+        );
       }
     }
 
-    const bus = await Bus.findOne(filter)
-      .populate("routeId", "routeNumber origin destination waypoints")
-      .populate("operatorId", "name registrationNumber contactInfo");
+    const bus = await Bus.findOne(filter).populate(
+      "routeId",
+      "routeNumber origin destination waypoints"
+    );
+
+    if (!bus) {
+      throw new Error("Bus not found or access denied");
+    }
+
+    return bus;
+  }
+
+  /**
+   * Get bus by unique busId (auto-generated identifier)
+   */
+  async getBusByBusId(busId, user = null) {
+    let filter = { busId: busId };
+
+    // Apply access control for regular users
+    if (user && user.role !== "admin" && user.assignedBusId) {
+      // For regular users, we need to find the bus first to check if it's their assigned bus
+      const bus = await Bus.findOne({ busId: busId });
+      if (!bus || bus._id.toString() !== user.assignedBusId.toString()) {
+        throw new Error(
+          "Access denied. You can only access your assigned bus."
+        );
+      }
+    }
+
+    const bus = await Bus.findOne(filter).populate(
+      "routeId",
+      "routeNumber origin destination waypoints"
+    );
 
     if (!bus) {
       throw new Error("Bus not found or access denied");
@@ -75,15 +96,13 @@ class BusService {
   /**
    * Create a new bus
    */
-  async createBus(busData) {
-    const {
-      busNumber,
-      operatorId,
-      routeId,
-      capacity,
-      busType,
-      currentLocation,
-    } = busData;
+  async createBus(busData, user = null) {
+    const { busNumber, routeId, capacity, busType } = busData;
+
+    // Authorization: Only admin can create buses
+    if (user && user.role !== "admin") {
+      throw new Error("Unauthorized access: Only admins can create buses");
+    }
 
     // Check if bus number already exists
     const existingBus = await Bus.findOne({ busNumber });
@@ -91,16 +110,28 @@ class BusService {
       throw new Error("Bus with this number already exists");
     }
 
+    // Validate route exists and is active
+    const Route = require("../models/Route");
+    const route = await Route.findById(routeId);
+    if (!route || !route.isActive) {
+      throw new Error("Invalid route: Route not found or inactive");
+    }
+
     const bus = await Bus.create({
       busNumber,
-      operatorId,
       routeId,
       capacity,
       busType,
-      currentLocation,
     });
 
-    logger.info(`New bus created: ${bus.busNumber} by operator: ${operatorId}`);
+    // Populate the created bus with route info
+    await bus.populate([
+      { path: "routeId", select: "routeNumber origin destination" },
+    ]);
+
+    logger.info(
+      `New bus created: ${bus.busNumber} (User: ${user?.username || "System"})`
+    );
     return bus;
   }
 
@@ -108,22 +139,38 @@ class BusService {
    * Update bus information
    */
   async updateBus(busId, updateData, user) {
-    const { capacity, busType, routeId, status } = updateData;
+    const { busNumber, capacity, busType, routeId, status } = updateData;
 
     let filter = { _id: busId };
 
-    // Apply access control
-    if (user.role === "operator") {
-      filter.operatorId = user.operatorId;
-    } else if (user.role === "driver") {
-      throw new Error("Drivers cannot update bus information");
+    // Apply access control - only admin can update buses
+    if (user.role !== "admin") {
+      throw new Error("Only admins can update bus information");
     }
 
-    const bus = await Bus.findOneAndUpdate(
-      filter,
-      { capacity, busType, routeId, status },
-      { new: true, runValidators: true }
-    ).populate("routeId", "routeNumber origin destination");
+    // Check if busNumber is being updated and if it already exists
+    if (busNumber) {
+      const existingBus = await Bus.findOne({
+        busNumber,
+        _id: { $ne: busId },
+      });
+      if (existingBus) {
+        throw new Error("Bus with this number already exists");
+      }
+    }
+
+    // Build update object with only provided fields
+    const updateFields = {};
+    if (busNumber !== undefined) updateFields.busNumber = busNumber;
+    if (capacity !== undefined) updateFields.capacity = capacity;
+    if (busType !== undefined) updateFields.busType = busType;
+    if (routeId !== undefined) updateFields.routeId = routeId;
+    if (status !== undefined) updateFields.status = status;
+
+    const bus = await Bus.findOneAndUpdate(filter, updateFields, {
+      new: true,
+      runValidators: true,
+    }).populate("routeId", "routeNumber origin destination");
 
     if (!bus) {
       throw new Error("Bus not found or access denied");
@@ -161,15 +208,13 @@ class BusService {
 
     let filter = { _id: busId };
 
-    // Apply access control - only assigned driver or operator can update location
-    if (user.role === "driver") {
+    // Apply access control - only assigned user or admin can update location
+    if (user.role === "user") {
       if (!user.assignedBusId || user.assignedBusId.toString() !== busId) {
         throw new Error(
           "Access denied. You can only update your assigned bus location."
         );
       }
-    } else if (user.role === "operator") {
-      filter.operatorId = user.operatorId;
     }
 
     // Update bus current location
@@ -220,22 +265,12 @@ class BusService {
 
     // Check access permissions
     if (
-      user.role === "driver" &&
+      user.role === "user" &&
       (!user.assignedBusId || user.assignedBusId.toString() !== busId)
     ) {
       throw new Error(
         "Access denied. You can only access your assigned bus location history."
       );
-    }
-
-    if (user.role === "operator") {
-      const bus = await Bus.findOne({
-        _id: busId,
-        operatorId: user.operatorId,
-      });
-      if (!bus) {
-        throw new Error("Access denied. Bus not found in your operator fleet.");
-      }
     }
 
     const filter = { busId };
@@ -254,46 +289,26 @@ class BusService {
   }
 
   /**
-   * Get buses by operator
-   */
-  async getBusesByOperator(operatorId, user) {
-    // Check access permissions
-    if (user.role === "operator" && user.operatorId.toString() !== operatorId) {
-      throw new Error(
-        "Access denied. You can only access buses from your operator."
-      );
-    }
-
-    const buses = await Bus.find({ operatorId, isActive: true })
-      .populate("routeId", "routeNumber origin destination")
-      .sort({ busNumber: 1 });
-
-    return buses;
-  }
-
-  /**
    * Get buses by route
    */
   async getBusesByRoute(routeId) {
-    const buses = await Bus.find({ routeId, status: "active" })
-      .populate("operatorId", "name contactInfo")
-      .sort({ lastUpdated: -1 });
+    const buses = await Bus.find({ routeId, status: "active" }).sort({
+      lastUpdated: -1,
+    });
 
     return buses;
   }
 
   /**
-   * Delete bus (Admin/Operator only)
+   * Delete bus (Admin only)
    */
   async deleteBus(busId, user) {
-    let filter = { _id: busId };
-
-    // Apply access control
-    if (user.role === "operator") {
-      filter.operatorId = user.operatorId;
+    // Only admin can delete buses
+    if (user.role !== "admin") {
+      throw new Error("Only admins can delete buses");
     }
 
-    const bus = await Bus.findOne(filter);
+    const bus = await Bus.findById(busId);
     if (!bus) {
       throw new Error("Bus not found or access denied");
     }
@@ -311,15 +326,12 @@ class BusService {
    * Get bus statistics
    */
   async getBusStats(user) {
-    let matchFilter = {};
-
-    // Apply role-based filtering
-    if (user.role === "operator") {
-      matchFilter.operatorId = user.operatorId;
+    // Only admin can view bus statistics
+    if (user.role !== "admin") {
+      throw new Error("Only admins can view bus statistics");
     }
 
     const stats = await Bus.aggregate([
-      { $match: matchFilter },
       {
         $group: {
           _id: "$status",
@@ -328,22 +340,14 @@ class BusService {
       },
     ]);
 
-    const totalBuses = await Bus.countDocuments(matchFilter);
-    const activeBuses = await Bus.countDocuments({
-      ...matchFilter,
-      status: "active",
-    });
-    const inactiveBuses = await Bus.countDocuments({
-      ...matchFilter,
-      status: "inactive",
-    });
+    const totalBuses = await Bus.countDocuments();
+    const activeBuses = await Bus.countDocuments({ status: "active" });
+    const inactiveBuses = await Bus.countDocuments({ status: "inactive" });
     const maintenanceBuses = await Bus.countDocuments({
-      ...matchFilter,
       status: "maintenance",
     });
 
     const busTypeStats = await Bus.aggregate([
-      { $match: matchFilter },
       {
         $group: {
           _id: "$busType",

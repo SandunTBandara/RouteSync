@@ -54,11 +54,9 @@ const router = express.Router();
  *           description: User's phone number
  *         role:
  *           type: string
- *           enum: [admin, operator, driver, user]
+ *           enum: [admin, user]
  *           description: User role
- *         operatorId:
- *           type: string
- *           description: Associated operator ID (for operator/driver roles)
+
  *         assignedBusId:
  *           type: string
  *           description: Assigned bus ID (for driver role)
@@ -114,11 +112,9 @@ const router = express.Router();
  *           pattern: '^\+94\d{9}$'
  *         role:
  *           type: string
- *           enum: [admin, operator, driver, user]
+ *           enum: [admin, user]
  *           default: user
- *         operatorId:
- *           type: string
- *           description: Required for operator/driver roles
+
  *         assignedBusId:
  *           type: string
  *           description: Required for driver role
