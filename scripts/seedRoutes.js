@@ -9,32 +9,6 @@ const sampleRoutes = [
     destination: "Kandy",
     distance: 116,
     estimatedDuration: 180,
-    waypoints: [
-      {
-        name: "Kadawatha",
-        location: {
-          type: "Point",
-          coordinates: [79.9935, 7.0907],
-        },
-        estimatedTime: 30,
-      },
-      {
-        name: "Kegalle",
-        location: {
-          type: "Point",
-          coordinates: [80.3431, 7.2513],
-        },
-        estimatedTime: 90,
-      },
-      {
-        name: "Mawanella",
-        location: {
-          type: "Point",
-          coordinates: [80.4542, 7.2478],
-        },
-        estimatedTime: 120,
-      },
-    ],
     isActive: true,
   },
   {
@@ -43,32 +17,6 @@ const sampleRoutes = [
     destination: "Galle",
     distance: 119,
     estimatedDuration: 150,
-    waypoints: [
-      {
-        name: "Panadura",
-        location: {
-          type: "Point",
-          coordinates: [79.9037, 6.7132],
-        },
-        estimatedTime: 45,
-      },
-      {
-        name: "Kalutara",
-        location: {
-          type: "Point",
-          coordinates: [79.9595, 6.5854],
-        },
-        estimatedTime: 60,
-      },
-      {
-        name: "Bentota",
-        location: {
-          type: "Point",
-          coordinates: [80.0021, 6.4268],
-        },
-        estimatedTime: 90,
-      },
-    ],
     isActive: true,
   },
   {
@@ -77,32 +25,6 @@ const sampleRoutes = [
     destination: "Matara",
     distance: 160,
     estimatedDuration: 210,
-    waypoints: [
-      {
-        name: "Moratuwa",
-        location: {
-          type: "Point",
-          coordinates: [79.8816, 6.7733],
-        },
-        estimatedTime: 30,
-      },
-      {
-        name: "Aluthgama",
-        location: {
-          type: "Point",
-          coordinates: [80.0021, 6.4268],
-        },
-        estimatedTime: 75,
-      },
-      {
-        name: "Hikkaduwa",
-        location: {
-          type: "Point",
-          coordinates: [80.099, 6.1387],
-        },
-        estimatedTime: 120,
-      },
-    ],
     isActive: true,
   },
 ];
