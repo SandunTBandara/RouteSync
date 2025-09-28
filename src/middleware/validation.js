@@ -203,6 +203,91 @@ const validateBusUpdate = [
     .withMessage("Status must be one of: active, inactive, maintenance"),
 ];
 
+/**
+ * Validation for route creation
+ */
+const validateRoute = [
+  body("routeNumber")
+    .trim()
+    .isLength({ min: 1, max: 10 })
+    .withMessage("Route number is required and cannot exceed 10 characters")
+    .matches(/^[A-Z0-9-]+$/)
+    .withMessage(
+      "Route number can only contain uppercase letters, numbers, and hyphens"
+    ),
+
+  body("origin")
+    .trim()
+    .isLength({ min: 2, max: 100 })
+    .withMessage("Origin is required and must be between 2-100 characters"),
+
+  body("destination")
+    .trim()
+    .isLength({ min: 2, max: 100 })
+    .withMessage(
+      "Destination is required and must be between 2-100 characters"
+    ),
+
+  body("distance")
+    .isNumeric()
+    .isFloat({ min: 0.1, max: 1000 })
+    .withMessage("Distance must be a number between 0.1 and 1000 km"),
+
+  body("estimatedDuration")
+    .isNumeric()
+    .isInt({ min: 1, max: 1440 })
+    .withMessage("Estimated duration must be between 1 and 1440 minutes"),
+
+  body("isActive")
+    .optional()
+    .isBoolean()
+    .withMessage("isActive must be a boolean value"),
+];
+
+/**
+ * Validation for route updates
+ */
+const validateRouteUpdate = [
+  body("routeNumber")
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 10 })
+    .withMessage("Route number cannot exceed 10 characters")
+    .matches(/^[A-Z0-9-]+$/)
+    .withMessage(
+      "Route number can only contain uppercase letters, numbers, and hyphens"
+    ),
+
+  body("origin")
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 100 })
+    .withMessage("Origin must be between 2-100 characters"),
+
+  body("destination")
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 100 })
+    .withMessage("Destination must be between 2-100 characters"),
+
+  body("distance")
+    .optional()
+    .isNumeric()
+    .isFloat({ min: 0.1, max: 1000 })
+    .withMessage("Distance must be a number between 0.1 and 1000 km"),
+
+  body("estimatedDuration")
+    .optional()
+    .isNumeric()
+    .isInt({ min: 1, max: 1440 })
+    .withMessage("Estimated duration must be between 1 and 1440 minutes"),
+
+  body("isActive")
+    .optional()
+    .isBoolean()
+    .withMessage("isActive must be a boolean value"),
+];
+
 module.exports = {
   validateRegister,
   validateLogin,
@@ -212,4 +297,6 @@ module.exports = {
   validateLocationUpdate,
   validateBus,
   validateBusUpdate,
+  validateRoute,
+  validateRouteUpdate,
 };
