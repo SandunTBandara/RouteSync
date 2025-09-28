@@ -288,6 +288,52 @@ const validateRouteUpdate = [
     .withMessage("isActive must be a boolean value"),
 ];
 
+/**
+ * Validation for bus location update
+ */
+const validateBusLocationUpdate = [
+  body("longitude")
+    .isFloat({ min: -180, max: 180 })
+    .withMessage("Longitude must be between -180 and 180"),
+
+  body("latitude")
+    .isFloat({ min: -90, max: 90 })
+    .withMessage("Latitude must be between -90 and 90"),
+
+  body("speed")
+    .optional()
+    .isFloat({ min: 0, max: 300 })
+    .withMessage("Speed must be between 0 and 300 km/h"),
+
+  body("heading")
+    .optional()
+    .isFloat({ min: 0, max: 360 })
+    .withMessage("Heading must be between 0 and 360 degrees"),
+
+  body("timestamp")
+    .optional()
+    .isISO8601()
+    .withMessage("Timestamp must be a valid ISO 8601 date"),
+];
+
+/**
+ * Validation for nearby buses query
+ */
+const validateNearbyBuses = [
+  body("latitude")
+    .isFloat({ min: -90, max: 90 })
+    .withMessage("Latitude must be between -90 and 90"),
+
+  body("longitude")
+    .isFloat({ min: -180, max: 180 })
+    .withMessage("Longitude must be between -180 and 180"),
+
+  body("radius")
+    .optional()
+    .isFloat({ min: 0.1, max: 100 })
+    .withMessage("Radius must be between 0.1 and 100 km"),
+];
+
 module.exports = {
   validateRegister,
   validateLogin,
@@ -299,4 +345,6 @@ module.exports = {
   validateBusUpdate,
   validateRoute,
   validateRouteUpdate,
+  validateBusLocationUpdate,
+  validateNearbyBuses,
 };
