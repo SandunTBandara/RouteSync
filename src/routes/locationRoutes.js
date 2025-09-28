@@ -38,7 +38,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/v1/locations:
+ * /locations:
  *   get:
  *     summary: Get all bus locations
  *     tags: [Locations]
@@ -78,7 +78,7 @@ router.get("/", async (req, res) => {
 
 /**
  * @swagger
- * /api/v1/locations/bus/{busId}:
+ * /locations/bus/{busId}:
  *   get:
  *     summary: Get location for specific bus
  *     tags: [Locations]
@@ -120,7 +120,7 @@ router.get("/bus/:busId", async (req, res) => {
 
 /**
  * @swagger
- * /api/v1/locations/bus/{busId}:
+ * /locations/bus/{busId}:
  *   post:
  *     summary: Update bus location
  *     tags: [Locations]
