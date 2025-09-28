@@ -4,10 +4,10 @@ const locationController = require("../controllers/locationController");
 const { protect } = require("../middleware/auth");
 // Test route (no authentication required)
 router.get("/test", (req, res) => {
-  res.json({ 
-    success: true, 
+  res.json({
+    success: true,
     message: "Location routes are working!",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -70,7 +70,11 @@ router.get("/test", (req, res) => {
  *       404:
  *         description: Bus not found
  */
-router.get("/bus/:busId/date/:date", protect, locationController.getLocationsByBusAndDate);
+router.get(
+  "/bus/:busId/date/:date",
+  protect,
+  locationController.getLocationsByBusAndDate
+);
 
 /**
  * @swagger
@@ -100,7 +104,11 @@ router.get("/bus/:busId/date/:date", protect, locationController.getLocationsByB
  *       401:
  *         description: Unauthorized
  */
-router.post("/bus/:busId/update", protect, locationController.updateBusLocation);
+router.post(
+  "/bus/:busId/update",
+  protect,
+  locationController.updateBusLocation
+);
 
 /**
  * @swagger
@@ -146,7 +154,11 @@ router.put("/bus/:busId/update", protect, locationController.updateBusLocation);
  *       200:
  *         description: Latest bus location retrieved successfully
  */
-router.get("/bus/:busId/latest", protect, locationController.getLatestBusLocation);
+router.get(
+  "/bus/:busId/latest",
+  protect,
+  locationController.getLatestBusLocation
+);
 
 /**
  * @swagger
@@ -176,7 +188,11 @@ router.get("/bus/:busId/latest", protect, locationController.getLatestBusLocatio
  *       200:
  *         description: Bus location history retrieved successfully
  */
-router.get("/bus/:busId/history", protect, locationController.getBusLocationHistory);
+router.get(
+  "/bus/:busId/history",
+  protect,
+  locationController.getBusLocationHistory
+);
 
 /**
  * @swagger
@@ -190,7 +206,11 @@ router.get("/bus/:busId/history", protect, locationController.getBusLocationHist
  *       200:
  *         description: Active bus locations retrieved successfully
  */
-router.get("/buses/active", protect, locationController.getAllActiveBusLocations);
+router.get(
+  "/buses/active",
+  protect,
+  locationController.getAllActiveBusLocations
+);
 
 /**
  * @swagger
@@ -210,6 +230,10 @@ router.get("/buses/active", protect, locationController.getAllActiveBusLocations
  *       200:
  *         description: Bus location statistics retrieved successfully
  */
-router.get("/bus/:busId/stats", protect, locationController.getBusLocationStats);
+router.get(
+  "/bus/:busId/stats",
+  protect,
+  locationController.getBusLocationStats
+);
 
 module.exports = router;
