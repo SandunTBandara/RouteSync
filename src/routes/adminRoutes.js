@@ -19,7 +19,7 @@ router.use(authorize("admin"));
 
 /**
  * @swagger
- * /api/v1/admin/users/stats:
+ * /admin/users/stats:
  *   get:
  *     summary: Get user statistics (Admin only)
  *     tags: [Admin]
@@ -57,7 +57,7 @@ router.get("/users/stats", getUserStats);
 
 /**
  * @swagger
- * /api/v1/admin/users:
+ * /admin/users:
  *   get:
  *     summary: Get all users (Admin only)
  *     tags: [Admin]
@@ -117,7 +117,7 @@ router.get("/users", getAllUsers);
 
 /**
  * @swagger
- * /api/v1/admin/create-admin:
+ * /admin/create-admin:
  *   post:
  *     summary: Create a new admin user (Admin only)
  *     tags: [Admin]
@@ -222,7 +222,7 @@ router.post("/create-admin", validateRegister, createAdmin);
 
 /**
  * @swagger
- * /api/v1/admin/users:
+ * /admin/users:
  *   post:
  *     summary: Create new user (Admin only)
  *     tags: [Admin]
@@ -248,7 +248,7 @@ router.post("/users", validateRegister, createUser);
 
 /**
  * @swagger
- * /api/v1/admin/users/{id}:
+ * /admin/users/{id}:
  *   get:
  *     summary: Get user by ID (Admin only)
  *     tags: [Admin]
@@ -282,7 +282,7 @@ router.get("/users/:id", getUserById);
 
 /**
  * @swagger
- * /api/v1/admin/users/{id}:
+ * /admin/users/{id}:
  *   put:
  *     summary: Update user (Admin only)
  *     tags: [Admin]
@@ -330,7 +330,7 @@ router.put("/users/:id", updateUser);
 
 /**
  * @swagger
- * /api/v1/admin/users/{id}:
+ * /admin/users/{id}:
  *   delete:
  *     summary: Delete user (Admin only)
  *     tags: [Admin]
