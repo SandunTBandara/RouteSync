@@ -15,20 +15,6 @@ const routeSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    waypoints: [
-      {
-        name: String,
-        location: {
-          type: {
-            type: String,
-            enum: ["Point"],
-            default: "Point",
-          },
-          coordinates: [Number],
-        },
-        estimatedTime: Number,
-      },
-    ],
     distance: {
       type: Number,
       required: true,
@@ -44,6 +30,12 @@ const routeSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    versionKey: false, // Disables __v field entirely
+    toJSON: {
+      transform: function (doc, ret) {
+        return ret;
+      },
+    },
   }
 );
 

@@ -31,6 +31,7 @@ class RouteService {
     }
 
     const routes = await Route.find(filter)
+      .select("-__v")
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort({ routeNumber: 1 });
@@ -52,15 +53,16 @@ class RouteService {
    * Get route by ID
    */
   async getRouteById(routeId) {
-    const route = await Route.findById(routeId);
+    const route = await Route.findById(routeId).select("-__v");
 
     if (!route) {
       throw new Error("Route not found");
     }
 
     // Get buses on this route
-    const buses = await Bus.find({ routeId, status: "active" })
-    .select("busNumber busType currentLocation lastUpdated");
+    const buses = await Bus.find({ routeId, status: "active" }).select(
+      "busNumber busType currentLocation lastUpdated"
+    );
 
     return {
       route,
@@ -319,8 +321,9 @@ class RouteService {
       throw new Error("Route not found");
     }
 
-    const buses = await Bus.find({ routeId, status: "active" })
-    .sort({ lastUpdated: -1 });
+    const buses = await Bus.find({ routeId, status: "active" }).sort({
+      lastUpdated: -1,
+    });
 
     return {
       route,
