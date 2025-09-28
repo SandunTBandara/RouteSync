@@ -58,7 +58,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/v1/routes:
+ * /routes:
  *   get:
  *     summary: Get all routes
  *     tags: [Routes]
@@ -98,7 +98,7 @@ router.get("/", async (req, res) => {
 
 /**
  * @swagger
- * /api/v1/routes/{id}:
+ * /routes/{id}:
  *   get:
  *     summary: Get route by ID
  *     tags: [Routes]
