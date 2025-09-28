@@ -17,6 +17,7 @@
     "seed:users": "node scripts/seedUsers.js",
     "seed:routes": "node scripts/seedRoutes.js",
     "seed:buses": "node scripts/seedBuses.js",
+    "seed:locations": "node scripts/seedLocations.js",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "test:integration": "jest --testPathPattern=tests/integration",

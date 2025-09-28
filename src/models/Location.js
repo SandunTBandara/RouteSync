@@ -21,14 +21,14 @@ const locationSchema = new mongoose.Schema(
     speed: {
       type: Number, // km/h
       default: 0,
+      min: 0,
+      max: 300,
     },
     heading: {
       type: Number, // degrees (0-360)
       default: 0,
-    },
-    accuracy: {
-      type: Number, // in meters
-      default: 0,
+      min: 0,
+      max: 360,
     },
     timestamp: {
       type: Date,
@@ -41,6 +41,13 @@ const locationSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    versionKey: false, // Remove __v field
+    toJSON: {
+      transform: function (doc, ret) {
+        delete ret.__v;
+        return ret;
+      },
+    },
   }
 );
 

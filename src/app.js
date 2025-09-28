@@ -16,7 +16,7 @@ const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const busRoutes = require("./routes/busRoutes");
 const routeRoutes = require("./routes/routeRoutes");
-const locationRoutes = require("./routes/locationRoutes");
+const locationRoutes = require("./routes/locationRoutesFinal");
 
 const app = express();
 

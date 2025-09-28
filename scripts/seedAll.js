@@ -8,15 +8,20 @@ console.log("�️  Step 2: Seeding routes...");
 console.log("Run: pnpm run seed:routes");
 console.log("");
 
-console.log("�🚌 Step 3: Seeding buses...");
+console.log("🚌 Step 3: Seeding buses...");
 console.log("Run: pnpm run seed:buses");
 console.log("");
 
-console.log("📋 Quick Reference:");
+console.log("� Step 4: Seeding locations...");
+console.log("Run: pnpm run seed:locations");
+console.log("");
+
+console.log("�📋 Quick Reference:");
 console.log("Available seeding commands:");
-console.log("  • pnpm run seed:users   - Create test admin and users");
-console.log("  • pnpm run seed:routes  - Create bus routes");
-console.log("  • pnpm run seed:buses   - Create bus and route data");
+console.log("  • pnpm run seed:users     - Create test admin and users");
+console.log("  • pnpm run seed:routes    - Create bus routes");
+console.log("  • pnpm run seed:buses     - Create bus and route data");
+console.log("  • pnpm run seed:locations - Create location tracking data");
 console.log("");
 console.log("🔑 Test Login Credentials:");
 console.log("Admin Login:");
