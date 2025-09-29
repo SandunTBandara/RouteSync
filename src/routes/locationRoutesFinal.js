@@ -43,7 +43,7 @@ router.get("/test", (req, res) => {
 
 /**
  * @swagger
- * /api/locations/bus/{busId}/date/{date}:
+ * /locations/bus/{busId}/date/{date}:
  *   get:
  *     summary: Get location tracking details for a bus on a specific date
  *     tags: [Locations]
@@ -78,7 +78,7 @@ router.get(
 
 /**
  * @swagger
- * /api/locations/bus/{busId}/update:
+ * /locations/bus/{busId}/update:
  *   post:
  *     summary: Update bus location with timestamp, longitude, latitude, and speed
  *     tags: [Locations]
@@ -112,7 +112,7 @@ router.post(
 
 /**
  * @swagger
- * /api/locations/bus/{busId}/update:
+ * /locations/bus/{busId}/update:
  *   put:
  *     summary: Update bus location (PUT method)
  *     tags: [Locations]
@@ -138,7 +138,7 @@ router.put("/bus/:busId/update", protect, locationController.updateBusLocation);
 
 /**
  * @swagger
- * /api/locations/bus/{busId}/latest:
+ * /locations/bus/{busId}/latest:
  *   get:
  *     summary: Get latest location for a specific bus
  *     tags: [Locations]
@@ -162,7 +162,7 @@ router.get(
 
 /**
  * @swagger
- * /api/locations/bus/{busId}/history:
+ * /locations/bus/{busId}/history:
  *   get:
  *     summary: Get location history for a bus with pagination
  *     tags: [Locations]
@@ -196,7 +196,7 @@ router.get(
 
 /**
  * @swagger
- * /api/locations/buses/active:
+ * /locations/buses/active:
  *   get:
  *     summary: Get all active bus locations
  *     tags: [Locations]
@@ -214,7 +214,7 @@ router.get(
 
 /**
  * @swagger
- * /api/locations/bus/{busId}/stats:
+ * /locations/bus/{busId}/stats:
  *   get:
  *     summary: Get location statistics for a bus
  *     tags: [Locations]
