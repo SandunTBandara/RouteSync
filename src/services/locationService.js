@@ -132,7 +132,6 @@ class LocationService {
       longitude,
       speed = 0,
       heading = 0,
-      accuracy = 0,
       timestamp,
     } = locationData;
 
@@ -149,15 +148,6 @@ class LocationService {
       throw new Error("Longitude must be between -180 and 180");
     }
 
-    // Check access permissions
-    if (user.role === "driver") {
-      if (!user.assignedBusId || user.assignedBusId.toString() !== busId) {
-        throw new Error(
-          "Access denied. You can only update your assigned bus location."
-        );
-      }
-    }
-
     // Create location record
     const location = await Location.create({
       busId,
@@ -167,7 +157,6 @@ class LocationService {
       },
       speed,
       heading,
-      accuracy,
       timestamp: timestamp ? new Date(timestamp) : new Date(),
     });
 
