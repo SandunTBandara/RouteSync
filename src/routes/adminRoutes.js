@@ -7,6 +7,11 @@ const {
   updateUser,
   deleteUser,
   getUserStats,
+  createBusOperator,
+  getAllBusOperators,
+  getBusOperatorById,
+  updateBusOperator,
+  deleteBusOperator,
 } = require("../controllers/adminController");
 const { protect, authorize } = require("../middleware/auth");
 const { validateRegister } = require("../middleware/validation");
@@ -354,5 +359,230 @@ router.put("/users/:id", updateUser);
  *         description: Access denied - Admin role required
  */
 router.delete("/users/:id", deleteUser);
+
+// Bus Operator Management Routes
+
+/**
+ * @swagger
+ * /admin/bus-operators:
+ *   post:
+ *     summary: Create bus operator (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - email
+ *               - password
+ *               - firstName
+ *               - lastName
+ *               - phone
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 minLength: 3
+ *                 maxLength: 30
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *               firstName:
+ *                 type: string
+ *                 maxLength: 50
+ *               lastName:
+ *                 type: string
+ *                 maxLength: 50
+ *               phone:
+ *                 type: string
+ *                 example: "+94771234567"
+ *     responses:
+ *       201:
+ *         description: Bus operator created successfully
+ *       400:
+ *         description: Validation error or user already exists
+ *       403:
+ *         description: Access denied - Admin role required
+ */
+router.post("/bus-operators", validateRegister, createBusOperator);
+
+/**
+ * @swagger
+ * /admin/bus-operators:
+ *   get:
+ *     summary: Get all bus operators (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *         description: Number of items per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by username, email, firstName, or lastName
+ *       - in: query
+ *         name: isActive
+ *         schema:
+ *           type: boolean
+ *         description: Filter by active status
+ *     responses:
+ *       200:
+ *         description: Bus operators retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 count:
+ *                   type: number
+ *                 totalPages:
+ *                   type: number
+ *                 currentPage:
+ *                   type: number
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *       403:
+ *         description: Access denied - Admin role required
+ */
+router.get("/bus-operators", getAllBusOperators);
+
+/**
+ * @swagger
+ * /admin/bus-operators/{id}:
+ *   get:
+ *     summary: Get bus operator by ID (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Bus operator ID
+ *     responses:
+ *       200:
+ *         description: Bus operator retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: User is not a bus operator
+ *       404:
+ *         description: Bus operator not found
+ *       403:
+ *         description: Access denied - Admin role required
+ */
+router.get("/bus-operators/:id", getBusOperatorById);
+
+/**
+ * @swagger
+ * /admin/bus-operators/{id}:
+ *   put:
+ *     summary: Update bus operator (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Bus operator ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 minLength: 3
+ *                 maxLength: 30
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               firstName:
+ *                 type: string
+ *                 maxLength: 50
+ *               lastName:
+ *                 type: string
+ *                 maxLength: 50
+ *               phone:
+ *                 type: string
+ *                 pattern: '^\\+94\\d{9}$'
+ *               isActive:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Bus operator updated successfully
+ *       400:
+ *         description: Validation error or email/username already exists
+ *       404:
+ *         description: Bus operator not found
+ *       403:
+ *         description: Access denied - Admin role required
+ */
+router.put("/bus-operators/:id", updateBusOperator);
+
+/**
+ * @swagger
+ * /admin/bus-operators/{id}:
+ *   delete:
+ *     summary: Delete bus operator (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Bus operator ID
+ *     responses:
+ *       200:
+ *         description: Bus operator deleted successfully
+ *       400:
+ *         description: User is not a bus operator
+ *       404:
+ *         description: Bus operator not found
+ *       403:
+ *         description: Access denied - Admin role required
+ */
+router.delete("/bus-operators/:id", deleteBusOperator);
 
 module.exports = router;
