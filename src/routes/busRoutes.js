@@ -56,6 +56,9 @@ const handleValidation = (req, res, next) => {
  *         routeId:
  *           type: string
  *           description: Route reference ID
+ *         operatorId:
+ *           type: string
+ *           description: Bus operator reference ID
  *         capacity:
  *           type: number
  *           description: Bus seating capacity
@@ -140,8 +143,8 @@ router.get("/", optionalAuth, getAllBuses);
  *             type: object
  *             required:
  *               - busNumber
-
  *               - routeId
+ *               - operatorId
  *               - capacity
  *               - busType
  *             properties:
@@ -150,11 +153,14 @@ router.get("/", optionalAuth, getAllBuses);
  *                 description: Unique bus registration number
  *                 example: "NB-1234"
  *                 pattern: "^[A-Z0-9-]+$"
-
  *               routeId:
  *                 type: string
  *                 description: Route ObjectId
  *                 example: "60d5ecb54b24a04c30c9a2f2"
+ *               operatorId:
+ *                 type: string
+ *                 description: Bus operator ObjectId
+ *                 example: "60d5ecb54b24a04c30c9a3g8"
  *               capacity:
  *                 type: integer
  *                 minimum: 1

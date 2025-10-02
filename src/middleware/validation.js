@@ -42,8 +42,8 @@ const validateRegister = [
 
   body("role")
     .optional()
-    .isIn(["admin", "user"])
-    .withMessage("Role must be one of: admin, user"),
+    .isIn(["admin", "user", "bus_operator"])
+    .withMessage("Role must be one of: admin, user, bus_operator"),
 ];
 
 /**
@@ -156,6 +156,8 @@ const validateBus = [
 
   body("routeId").isMongoId().withMessage("Invalid route ID"),
 
+  body("operatorId").isMongoId().withMessage("Invalid operator ID"),
+
   body("capacity")
     .isInt({ min: 1, max: 100 })
     .withMessage("Capacity must be between 1 and 100 passengers"),
@@ -184,6 +186,8 @@ const validateBusUpdate = [
     ),
 
   body("routeId").optional().isMongoId().withMessage("Invalid route ID"),
+
+  body("operatorId").optional().isMongoId().withMessage("Invalid operator ID"),
 
   body("capacity")
     .optional()

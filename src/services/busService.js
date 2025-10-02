@@ -20,6 +20,7 @@ class BusService {
 
     const buses = await Bus.find(filter)
       .populate("routeId", "routeNumber origin destination")
+      .populate("operatorId", "username firstName lastName email phone")
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort({ lastUpdated: -1 });
@@ -52,10 +53,9 @@ class BusService {
       }
     }
 
-    const bus = await Bus.findOne(filter).populate(
-      "routeId",
-      "routeNumber origin destination waypoints"
-    );
+    const bus = await Bus.findOne(filter)
+      .populate("routeId", "routeNumber origin destination waypoints")
+      .populate("operatorId", "username firstName lastName email phone");
 
     if (!bus) {
       throw new Error("Bus not found or access denied");
@@ -81,10 +81,9 @@ class BusService {
       }
     }
 
-    const bus = await Bus.findOne(filter).populate(
-      "routeId",
-      "routeNumber origin destination waypoints"
-    );
+    const bus = await Bus.findOne(filter)
+      .populate("routeId", "routeNumber origin destination waypoints")
+      .populate("operatorId", "username firstName lastName email phone");
 
     if (!bus) {
       throw new Error("Bus not found or access denied");
@@ -97,7 +96,7 @@ class BusService {
    * Create a new bus
    */
   async createBus(busData, user = null) {
-    const { busNumber, routeId, capacity, busType } = busData;
+    const { busNumber, routeId, capacity, busType, operatorId } = busData;
 
     // Authorization: Only admin can create buses
     if (user && user.role !== "admin") {
@@ -117,20 +116,40 @@ class BusService {
       throw new Error("Invalid route: Route not found or inactive");
     }
 
+    // Validate operator exists and is a bus operator
+    const User = require("../models/User");
+    const operator = await User.findById(operatorId);
+    if (!operator) {
+      throw new Error("Invalid operator: Operator not found");
+    }
+    if (operator.role !== "bus_operator") {
+      throw new Error("Invalid operator: User must be a bus operator");
+    }
+
+    // Check if operator is already assigned to another bus
+    const existingAssignment = await Bus.findOne({ operatorId });
+    if (existingAssignment) {
+      throw new Error("Operator is already assigned to another bus");
+    }
+
     const bus = await Bus.create({
       busNumber,
       routeId,
       capacity,
       busType,
+      operatorId,
     });
 
-    // Populate the created bus with route info
+    // Populate the created bus with route and operator info
     await bus.populate([
       { path: "routeId", select: "routeNumber origin destination" },
+      { path: "operatorId", select: "username firstName lastName email phone" },
     ]);
 
     logger.info(
-      `New bus created: ${bus.busNumber} (User: ${user?.username || "System"})`
+      `New bus created: ${bus.busNumber} assigned to operator ${
+        operator.username
+      } (Created by: ${user?.username || "System"})`
     );
     return bus;
   }
@@ -139,7 +158,8 @@ class BusService {
    * Update bus information
    */
   async updateBus(busId, updateData, user) {
-    const { busNumber, capacity, busType, routeId, status } = updateData;
+    const { busNumber, capacity, busType, routeId, status, operatorId } =
+      updateData;
 
     let filter = { _id: busId };
 
@@ -159,6 +179,27 @@ class BusService {
       }
     }
 
+    // Validate operator if provided
+    if (operatorId) {
+      const User = require("../models/User");
+      const operator = await User.findById(operatorId);
+      if (!operator) {
+        throw new Error("Invalid operator: Operator not found");
+      }
+      if (operator.role !== "bus_operator") {
+        throw new Error("Invalid operator: User must be a bus operator");
+      }
+
+      // Check if operator is already assigned to another bus (excluding current bus)
+      const existingAssignment = await Bus.findOne({
+        operatorId,
+        _id: { $ne: busId },
+      });
+      if (existingAssignment) {
+        throw new Error("Operator is already assigned to another bus");
+      }
+    }
+
     // Build update object with only provided fields
     const updateFields = {};
     if (busNumber !== undefined) updateFields.busNumber = busNumber;
@@ -166,11 +207,14 @@ class BusService {
     if (busType !== undefined) updateFields.busType = busType;
     if (routeId !== undefined) updateFields.routeId = routeId;
     if (status !== undefined) updateFields.status = status;
+    if (operatorId !== undefined) updateFields.operatorId = operatorId;
 
     const bus = await Bus.findOneAndUpdate(filter, updateFields, {
       new: true,
       runValidators: true,
-    }).populate("routeId", "routeNumber origin destination");
+    })
+      .populate("routeId", "routeNumber origin destination")
+      .populate("operatorId", "username firstName lastName email phone");
 
     if (!bus) {
       throw new Error("Bus not found or access denied");

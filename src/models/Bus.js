@@ -20,6 +20,19 @@ const busSchema = new mongoose.Schema(
       ref: "Route",
       required: true,
     },
+    operatorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      validate: {
+        validator: async function (operatorId) {
+          const User = require("./User");
+          const operator = await User.findById(operatorId);
+          return operator && operator.role === "bus_operator";
+        },
+        message: "Operator must be a valid bus operator",
+      },
+    },
     capacity: {
       type: Number,
       required: true,
