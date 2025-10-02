@@ -103,14 +103,14 @@ const checkBusAccess = async (req, res, next) => {
   try {
     const user = req.user;
 
-    // Only admin can access bus resources
-    if (user.role === "admin") {
+    // Admin and bus operators can access bus resources
+    if (user.role === "admin" || user.role === "bus_operator") {
       return next();
     }
 
     return res.status(403).json({
       success: false,
-      message: "Access denied. Admin role required.",
+      message: "Access denied. Admin or Bus Operator role required.",
     });
   } catch (error) {
     logger.error("Bus access check error:", error);

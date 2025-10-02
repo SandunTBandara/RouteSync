@@ -386,11 +386,11 @@ router.delete("/:id", protect, authorize("admin"), deleteBus);
  *       404:
  *         description: Bus not found
  */
-// User or admin can update bus location
+// Bus operator or admin can update bus location
 router.put(
   "/:id/location",
   protect,
-  authorize("user", "admin"),
+  authorize("user", "admin", "bus_operator"),
   checkBusAccess,
   updateBusLocation
 );
