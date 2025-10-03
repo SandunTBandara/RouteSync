@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const User = require("../src/models/User");
 const bcrypt = require("bcryptjs");
+require("dotenv").config();
 
 // Test users data
 const testUsers = [
@@ -48,14 +49,13 @@ const testUsers = [
 
 const seedUsers = async () => {
   try {
-    await mongoose.connect("mongodb://localhost:27017/ntc-bus-tracking");
+    const mongoUri = process.env.MONGODB_URI;
+    await mongoose.connect(mongoUri);
     console.log("Connected to MongoDB");
 
-    // Clear existing users (optional - remove if you want to keep existing users)
     await User.deleteMany({});
     console.log("Existing users cleared");
 
-    // Hash passwords before seeding
     const usersWithHashedPasswords = await Promise.all(
       testUsers.map(async (user) => {
         const salt = await bcrypt.genSalt(10);
