@@ -1,0 +1,1779 @@
+openapi: 3.0.0
+info:
+  title: NTC Bus Tracking API
+  version: 1.0.0
+  description: Real-time GPS tracking system for NTC Sri Lanka inter-provincial buses with comprehensive bus operator management
+  contact:
+    name: NTC Sri Lanka
+    url: https://www.ntc.gov.lk
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+  - url: https://api.ntc.gov.lk/v1
+    description: Production server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Authorization header using the Bearer scheme
+
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique identifier for the user
+          example: "64f5a8b2c1d4e5f6a7b8c9d0"
+        username:
+          type: string
+          description: Unique username
+          example: "testadmin"
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: "admin@busroute.com"
+        firstName:
+          type: string
+          description: User's first name
+          example: "John"
+        lastName:
+          type: string
+          description: User's last name
+          example: "Doe"
+        phone:
+          type: string
+          description: User's phone number
+          example: "+94771234567"
+        role:
+          type: string
+          enum: ["admin", "user", "bus_operator"]
+          description: User role in the system
+          example: "admin"
+        isActive:
+          type: boolean
+          description: Whether the user account is active
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+
+    Bus:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique identifier for the bus
+          example: "64f5a8b2c1d4e5f6a7b8c9d0"
+        busId:
+          type: string
+          description: Auto-generated unique bus identifier
+          example: "BUS123456"
+          readOnly: true
+        busNumber:
+          type: string
+          description: Bus registration number
+          example: "NB-1234"
+        routeId:
+          oneOf:
+            - type: string
+              description: Route ID reference
+              example: "64f5a8b2c1d4e5f6a7b8c9d1"
+            - $ref: "#/components/schemas/Route"
+          description: Associated route information
+        operatorId:
+          oneOf:
+            - type: string
+              description: Bus operator ID reference
+              example: "64f5a8b2c1d4e5f6a7b8c9d2"
+            - $ref: "#/components/schemas/User"
+          description: Bus operator information
+        capacity:
+          type: number
+          description: Total passenger capacity
+          minimum: 1
+          example: 45
+        busType:
+          type: string
+          enum: ["Normal", "Semi Luxury", "Luxury", "Super Luxury"]
+          description: Type of bus service
+          example: "Semi Luxury"
+        status:
+          type: string
+          enum: ["active", "inactive", "maintenance"]
+          description: Current bus status
+          example: "active"
+        createdAt:
+          type: string
+          format: date-time
+          description: Bus creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+
+    Route:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique identifier for the route
+          example: "64f5a8b2c1d4e5f6a7b8c9d0"
+        routeNumber:
+          type: string
+          description: Route identification number
+          example: "100"
+        origin:
+          type: string
+          description: Starting point of the route
+          example: "Colombo"
+        destination:
+          type: string
+          description: End point of the route
+          example: "Kandy"
+        distance:
+          type: number
+          description: Total route distance in kilometers
+          minimum: 1
+          example: 115
+        estimatedDuration:
+          type: number
+          description: Estimated travel time in minutes
+          minimum: 1
+          example: 180
+        isActive:
+          type: boolean
+          description: Whether the route is currently active
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Route creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+
+    Location:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique identifier for the location record
+          example: "64f5a8b2c1d4e5f6a7b8c9d0"
+        busId:
+          oneOf:
+            - type: string
+              description: Bus ID reference
+              example: "64f5a8b2c1d4e5f6a7b8c9d1"
+            - $ref: "#/components/schemas/Bus"
+          description: Associated bus information
+        location:
+          type: object
+          description: GeoJSON Point format location
+          properties:
+            type:
+              type: string
+              enum: ["Point"]
+              example: "Point"
+            coordinates:
+              type: array
+              description: Longitude and latitude coordinates
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+              example: [79.8612, 6.9271]
+        speed:
+          type: number
+          description: Current speed in km/h
+          minimum: 0
+          example: 45
+        heading:
+          type: number
+          description: Direction in degrees (0-360)
+          minimum: 0
+          maximum: 360
+          example: 180
+        timestamp:
+          type: string
+          format: date-time
+          description: Location record timestamp
+        createdAt:
+          type: string
+          format: date-time
+          description: Record creation timestamp
+
+    LoginRequest:
+      type: object
+      required:
+        - login
+        - password
+      properties:
+        login:
+          type: string
+          description: Username or email address
+          example: "admin@busroute.com"
+        password:
+          type: string
+          description: User password
+          minLength: 6
+          example: "admin123"
+
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+        - firstName
+        - lastName
+        - phone
+      properties:
+        username:
+          type: string
+          description: Unique username
+          minLength: 3
+          maxLength: 30
+          example: "johndoe"
+        email:
+          type: string
+          format: email
+          description: Valid email address
+          example: "john@example.com"
+        password:
+          type: string
+          description: Strong password
+          minLength: 6
+          example: "password123"
+        firstName:
+          type: string
+          description: First name
+          minLength: 2
+          example: "John"
+        lastName:
+          type: string
+          description: Last name
+          minLength: 2
+          example: "Doe"
+        phone:
+          type: string
+          description: Valid phone number
+          pattern: '^\+94[0-9]{9}$'
+          example: "+94771234567"
+
+    BusCreateRequest:
+      type: object
+      required:
+        - busNumber
+        - routeId
+        - operatorId
+        - capacity
+        - busType
+      properties:
+        busNumber:
+          type: string
+          description: Unique bus registration number
+          pattern: "^[A-Z]{2,3}-[0-9]{4}$"
+          example: "NB-1234"
+        routeId:
+          type: string
+          description: Valid route identifier
+          pattern: "^[0-9a-fA-F]{24}$"
+          example: "64f5a8b2c1d4e5f6a7b8c9d1"
+        operatorId:
+          type: string
+          description: Valid bus operator identifier
+          pattern: "^[0-9a-fA-F]{24}$"
+          example: "64f5a8b2c1d4e5f6a7b8c9d2"
+        capacity:
+          type: number
+          description: Total passenger capacity
+          minimum: 1
+          maximum: 100
+          example: 45
+        busType:
+          type: string
+          enum: ["Normal", "Semi Luxury", "Luxury", "Super Luxury"]
+          description: Service type
+          example: "Semi Luxury"
+
+    BusUpdateRequest:
+      type: object
+      properties:
+        busNumber:
+          type: string
+          description: Bus registration number
+          pattern: "^[A-Z]{2,3}-[0-9]{4}$"
+          example: "NB-5678"
+        routeId:
+          type: string
+          description: Route identifier
+          pattern: "^[0-9a-fA-F]{24}$"
+          example: "64f5a8b2c1d4e5f6a7b8c9d1"
+        operatorId:
+          type: string
+          description: Bus operator identifier
+          pattern: "^[0-9a-fA-F]{24}$"
+          example: "64f5a8b2c1d4e5f6a7b8c9d2"
+        capacity:
+          type: number
+          description: Passenger capacity
+          minimum: 1
+          maximum: 100
+          example: 50
+        busType:
+          type: string
+          enum: ["Normal", "Semi Luxury", "Luxury", "Super Luxury"]
+          example: "Luxury"
+        status:
+          type: string
+          enum: ["active", "inactive", "maintenance"]
+          example: "active"
+
+    RouteCreateRequest:
+      type: object
+      required:
+        - routeNumber
+        - origin
+        - destination
+        - distance
+        - estimatedDuration
+      properties:
+        routeNumber:
+          type: string
+          description: Unique route number
+          example: "100"
+        origin:
+          type: string
+          description: Starting location
+          minLength: 2
+          example: "Colombo"
+        destination:
+          type: string
+          description: End location
+          minLength: 2
+          example: "Kandy"
+        distance:
+          type: number
+          description: Distance in kilometers
+          minimum: 1
+          maximum: 1000
+          example: 115
+        estimatedDuration:
+          type: number
+          description: Duration in minutes
+          minimum: 1
+          maximum: 1440
+          example: 180
+
+    RouteUpdateRequest:
+      type: object
+      properties:
+        routeNumber:
+          type: string
+          description: Route number
+          example: "100A"
+        origin:
+          type: string
+          description: Starting location
+          minLength: 2
+          example: "Colombo"
+        destination:
+          type: string
+          description: End location
+          minLength: 2
+          example: "Kandy"
+        distance:
+          type: number
+          description: Distance in kilometers
+          minimum: 1
+          maximum: 1000
+          example: 120
+        estimatedDuration:
+          type: number
+          description: Duration in minutes
+          minimum: 1
+          maximum: 1440
+          example: 185
+        isActive:
+          type: boolean
+          description: Route status
+          example: true
+
+    LocationUpdateRequest:
+      type: object
+      required:
+        - longitude
+        - latitude
+      properties:
+        longitude:
+          type: number
+          description: Longitude coordinate
+          minimum: -180
+          maximum: 180
+          example: 79.8612
+        latitude:
+          type: number
+          description: Latitude coordinate
+          minimum: -90
+          maximum: 90
+          example: 6.9271
+        speed:
+          type: number
+          description: Current speed in km/h
+          minimum: 0
+          maximum: 200
+          example: 45
+        heading:
+          type: number
+          description: Direction in degrees
+          minimum: 0
+          maximum: 360
+          example: 180
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Operation success status
+          example: true
+        message:
+          type: string
+          description: Success message
+          example: "Operation completed successfully"
+        data:
+          type: object
+          description: Response data
+
+    PaginatedResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        count:
+          type: number
+          description: Number of items in current page
+          example: 10
+        totalPages:
+          type: number
+          description: Total number of pages
+          example: 5
+        currentPage:
+          type: string
+          description: Current page number
+          example: "1"
+        data:
+          type: array
+          items:
+            type: object
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Operation success status
+          example: false
+        message:
+          type: string
+          description: Error message
+          example: "Error occurred"
+        errors:
+          type: array
+          description: Detailed error information
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "email"
+              message:
+                type: string
+                example: "Email is required"
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Validation failed"
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "email"
+              message:
+                type: string
+                example: "Valid email is required"
+
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Login successful"
+        data:
+          type: object
+          properties:
+            accessToken:
+              type: string
+              description: JWT access token
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            refreshToken:
+              type: string
+              description: JWT refresh token
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            user:
+              $ref: "#/components/schemas/User"
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization endpoints
+  - name: Admin - User Management
+    description: Admin-only user management operations
+  - name: Admin - Bus Operator Management
+    description: Admin-only bus operator management operations
+  - name: Buses
+    description: Bus fleet management operations
+  - name: Routes
+    description: Route management operations
+  - name: Locations
+    description: Real-time location tracking operations
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Create a new user account in the system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+            examples:
+              user_registration:
+                summary: Standard user registration
+                value:
+                  username: "johndoe"
+                  email: "john@example.com"
+                  password: "password123"
+                  firstName: "John"
+                  lastName: "Doe"
+                  phone: "+94771234567"
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/User"
+              examples:
+                success:
+                  summary: Successful registration
+                  value:
+                    success: true
+                    message: "User registered successfully"
+                    data:
+                      _id: "64f5a8b2c1d4e5f6a7b8c9d0"
+                      username: "johndoe"
+                      email: "john@example.com"
+                      role: "user"
+                      isActive: true
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+        "409":
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and receive access tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            examples:
+              admin_login:
+                summary: Admin login
+                value:
+                  login: "testadmin@busroute.com"
+                  password: "admin123"
+              operator_login:
+                summary: Bus operator login
+                value:
+                  login: "operator@busroute.com"
+                  password: "operator123"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Account disabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user profile
+      description: Retrieve authenticated user's profile information
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized - Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      description: Invalidate user session and tokens
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/users:
+    get:
+      tags:
+        - Admin - User Management
+      summary: Get all users
+      description: Retrieve paginated list of all users (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: role
+          in: query
+          description: Filter by user role
+          schema:
+            type: string
+            enum: ["admin", "user", "bus_operator"]
+        - name: search
+          in: query
+          description: Search in username, email, firstName, lastName
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/User"
+        "403":
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      tags:
+        - Admin - User Management
+      summary: Create a new user
+      description: Create a new user account (Admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/RegisterRequest"
+                - type: object
+                  properties:
+                    role:
+                      type: string
+                      enum: ["user", "bus_operator"]
+                      description: User role (admin can only be created via special endpoint)
+      responses:
+        "201":
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "403":
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/users/{id}:
+    get:
+      tags:
+        - Admin - User Management
+      summary: Get user by ID
+      description: Retrieve specific user details (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      responses:
+        "200":
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/User"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      tags:
+        - Admin - User Management
+      summary: Update user
+      description: Update user information (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  minLength: 2
+                lastName:
+                  type: string
+                  minLength: 2
+                phone:
+                  type: string
+                  pattern: '^\+94[0-9]{9}$'
+                role:
+                  type: string
+                  enum: ["admin", "user", "bus_operator"]
+                isActive:
+                  type: boolean
+      responses:
+        "200":
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      tags:
+        - Admin - User Management
+      summary: Delete user
+      description: Remove user from system (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      responses:
+        "200":
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/create-admin:
+    post:
+      tags:
+        - Admin - User Management
+      summary: Create admin user
+      description: Create a new admin user (Admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Admin created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "403":
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/bus-operators:
+    get:
+      tags:
+        - Admin - Bus Operator Management
+      summary: Get all bus operators
+      description: Retrieve paginated list of bus operators (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: isActive
+          in: query
+          description: Filter by active status
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Bus operators retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/User"
+
+    post:
+      tags:
+        - Admin - Bus Operator Management
+      summary: Create bus operator
+      description: Create a new bus operator account (Admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Bus operator created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/bus-operators/{id}:
+    get:
+      tags:
+        - Admin - Bus Operator Management
+      summary: Get bus operator by ID
+      description: Retrieve specific bus operator details (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Bus operator ID
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      responses:
+        "200":
+          description: Bus operator retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/User"
+
+    put:
+      tags:
+        - Admin - Bus Operator Management
+      summary: Update bus operator
+      description: Update bus operator information (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Bus operator ID
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  minLength: 2
+                lastName:
+                  type: string
+                  minLength: 2
+                phone:
+                  type: string
+                  pattern: '^\+94[0-9]{9}$'
+                isActive:
+                  type: boolean
+      responses:
+        "200":
+          description: Bus operator updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+    delete:
+      tags:
+        - Admin - Bus Operator Management
+      summary: Delete bus operator
+      description: Remove bus operator from system (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Bus operator ID
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      responses:
+        "200":
+          description: Bus operator deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /buses:
+    get:
+      tags:
+        - Buses
+      summary: Get all buses
+      description: Retrieve paginated list of all buses (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: status
+          in: query
+          description: Filter by bus status
+          schema:
+            type: string
+            enum: ["active", "inactive", "maintenance"]
+        - name: busType
+          in: query
+          description: Filter by bus type
+          schema:
+            type: string
+            enum: ["Normal", "Semi Luxury", "Luxury", "Super Luxury"]
+        - name: search
+          in: query
+          description: Search in bus number or bus ID
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Buses retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Bus"
+
+    post:
+      tags:
+        - Buses
+      summary: Create a new bus
+      description: Add a new bus to the fleet (Admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BusCreateRequest"
+            examples:
+              standard_bus:
+                summary: Standard bus creation
+                value:
+                  busNumber: "NB-1234"
+                  routeId: "64f5a8b2c1d4e5f6a7b8c9d1"
+                  operatorId: "64f5a8b2c1d4e5f6a7b8c9d2"
+                  capacity: 45
+                  busType: "Semi Luxury"
+      responses:
+        "201":
+          description: Bus created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Bus"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+
+  /buses/{id}:
+    get:
+      tags:
+        - Buses
+      summary: Get bus by ID
+      description: Retrieve specific bus details (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Bus ID
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      responses:
+        "200":
+          description: Bus retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Bus"
+        "404":
+          description: Bus not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      tags:
+        - Buses
+      summary: Update bus
+      description: Update bus information (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Bus ID
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BusUpdateRequest"
+      responses:
+        "200":
+          description: Bus updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Bus not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      tags:
+        - Buses
+      summary: Delete bus
+      description: Remove bus from fleet (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Bus ID
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      responses:
+        "200":
+          description: Bus deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Bus not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /routes:
+    get:
+      tags:
+        - Routes
+      summary: Get all routes
+      description: Retrieve paginated list of all routes (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: search
+          in: query
+          description: Search in route number, origin, destination
+          schema:
+            type: string
+        - name: isActive
+          in: query
+          description: Filter by active status
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Routes retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Route"
+
+    post:
+      tags:
+        - Routes
+      summary: Create a new route
+      description: Add a new route to the system (Admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RouteCreateRequest"
+            examples:
+              colombo_kandy:
+                summary: Colombo to Kandy route
+                value:
+                  routeNumber: "100"
+                  origin: "Colombo"
+                  destination: "Kandy"
+                  distance: 115
+                  estimatedDuration: 180
+      responses:
+        "201":
+          description: Route created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /routes/{id}:
+    get:
+      tags:
+        - Routes
+      summary: Get route by ID
+      description: Retrieve specific route details (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Route ID
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      responses:
+        "200":
+          description: Route retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Route"
+
+    put:
+      tags:
+        - Routes
+      summary: Update route
+      description: Update route information (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Route ID
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RouteUpdateRequest"
+      responses:
+        "200":
+          description: Route updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+    delete:
+      tags:
+        - Routes
+      summary: Delete route
+      description: Remove route from system (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Route ID
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      responses:
+        "200":
+          description: Route deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /locations/bus/{busId}/date/{date}:
+    get:
+      tags:
+        - Locations
+      summary: Get bus location tracking for specific date
+      description: Retrieve all location records for a bus on a specific date
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: busId
+          in: path
+          required: true
+          description: Bus ID
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+        - name: date
+          in: path
+          required: true
+          description: Date in YYYY-MM-DD format
+          schema:
+            type: string
+            format: date
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+          example: "2025-09-29"
+      responses:
+        "200":
+          description: Location tracking data retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      count:
+                        type: number
+                        description: Number of location records
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Location"
+
+  /locations/bus/{busId}/update:
+    post:
+      tags:
+        - Locations
+      summary: Update bus location (POST)
+      description: Create new location record for a bus
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: busId
+          in: path
+          required: true
+          description: Bus ID
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationUpdateRequest"
+            examples:
+              location_update:
+                summary: Standard location update
+                value:
+                  longitude: 79.8612
+                  latitude: 6.9271
+                  speed: 45
+                  heading: 180
+      responses:
+        "201":
+          description: Location updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Location"
+
+    put:
+      tags:
+        - Locations
+      summary: Update bus location (PUT)
+      description: Update bus location using PUT method
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: busId
+          in: path
+          required: true
+          description: Bus ID
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationUpdateRequest"
+      responses:
+        "200":
+          description: Location updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /locations/bus/{busId}/latest:
+    get:
+      tags:
+        - Locations
+      summary: Get latest location for a bus
+      description: Retrieve the most recent location record for a specific bus
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: busId
+          in: path
+          required: true
+          description: Bus ID
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      responses:
+        "200":
+          description: Latest location retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Location"
+        "404":
+          description: No location data found for this bus
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /locations/bus/{busId}/history:
+    get:
+      tags:
+        - Locations
+      summary: Get location history for a bus
+      description: Retrieve historical location data for a bus with optional date filtering
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: busId
+          in: path
+          required: true
+          description: Bus ID
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+        - name: startDate
+          in: query
+          description: Start date for filtering
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: End date for filtering
+          schema:
+            type: string
+            format: date
+        - name: limit
+          in: query
+          description: Maximum number of records
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+      responses:
+        "200":
+          description: Location history retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      count:
+                        type: number
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Location"
+
+  /locations/buses/active:
+    get:
+      tags:
+        - Locations
+      summary: Get all active bus locations
+      description: Retrieve latest location data for all active buses
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Active bus locations retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      count:
+                        type: number
+                        description: Number of active buses
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Location"
+
+  /locations/bus/{busId}/stats:
+    get:
+      tags:
+        - Locations
+      summary: Get location statistics for a bus
+      description: Retrieve statistical information about a bus's location data
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: busId
+          in: path
+          required: true
+          description: Bus ID
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+        - name: startDate
+          in: query
+          description: Start date for statistics
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: End date for statistics
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Location statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          totalRecords:
+                            type: number
+                            description: Total number of location records
+                          averageSpeed:
+                            type: number
+                            description: Average speed in km/h
+                          maxSpeed:
+                            type: number
+                            description: Maximum speed recorded
+                          totalDistance:
+                            type: number
+                            description: Total distance traveled in km
+                          firstRecord:
+                            type: string
+                            format: date-time
+                            description: Timestamp of first record
+                          lastRecord:
+                            type: string
+                            format: date-time
+                            description: Timestamp of last record
+
+  /locations/test:
+    get:
+      tags:
+        - Locations
+      summary: Test location endpoint
+      description: Simple test endpoint to verify location service connectivity
+      responses:
+        "200":
+          description: Location service is working
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Location routes are working!"
+                  timestamp:
+                    type: string
+                    format: date-time

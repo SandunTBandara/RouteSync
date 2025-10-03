@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Route = require("../src/models/Route");
+require("dotenv").config();
 
 // Sample Sri Lankan bus routes
 const sampleRoutes = [
@@ -31,7 +32,8 @@ const sampleRoutes = [
 
 const seedRoutes = async () => {
   try {
-    await mongoose.connect("mongodb://localhost:27017/ntc-bus-tracking");
+    const mongoUri = process.env.MONGODB_URI;
+    await mongoose.connect(mongoUri);
     console.log("Connected to MongoDB");
 
     // Clear existing routes (optional)
