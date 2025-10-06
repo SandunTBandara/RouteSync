@@ -25,7 +25,16 @@ connectDatabase();
 
 // Security middleware
 app.use(helmet());
-app.use(cors());
+
+// CORS configuration - Allow all origins
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: "*",
+    credentials: false,
+  })
+);
 
 // Logging middleware
 app.use(
