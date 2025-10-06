@@ -26,7 +26,9 @@
     "format": "prettier --write \"src/**/*.js\"",
     "validate": "pnpm run lint && pnpm run test",
     "clean": "rm -rf node_modules pnpm-lock.yaml && pnpm install",
-    "health": "curl http://localhost:3000/health || echo 'Server not running'"
+    "health": "curl http://localhost:3000/health || echo 'Server not running'",
+    "location-updater": "node scripts/autoLocationUpdater.js",
+    "location-updater:help": "node scripts/autoLocationUpdater.js --help"
   },
   "keywords": [
     "bus-tracking",
@@ -41,6 +43,7 @@
   "author": "NTC Sri Lanka Development Team",
   "license": "MIT",
   "dependencies": {
+    "axios": "^1.12.2",
     "bcryptjs": "^3.0.2",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
@@ -51,6 +54,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.2",
     "morgan": "^1.10.1",
+    "node-cron": "^3.0.3",
     "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
