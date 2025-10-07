@@ -13,7 +13,7 @@ info:
 servers:
   - url: http://localhost:3000/api/v1
     description: Development server
-  - url: https://api.ntc.gov.lk/v1
+  - url: http://api.route-sync.top/api/v1
     description: Production server
 
 components:
