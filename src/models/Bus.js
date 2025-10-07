@@ -110,7 +110,4 @@ busSchema.pre("save", async function (next) {
   next();
 });
 
-// Add index for better query performance
-busSchema.index({ busId: 1 });
-
 module.exports = mongoose.model("Bus", busSchema);

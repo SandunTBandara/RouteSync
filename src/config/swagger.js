@@ -17,7 +17,7 @@ const swaggerOptions = {
         description: "Development server",
       },
       {
-        url: `http://api.route-sync.top/api/v1`,
+        url: process.env.API_URL || `https://${process.env.HOST || 'localhost'}:${process.env.PORT || 3000}/api/v1`,
         description: "Production server",
       },
     ],
