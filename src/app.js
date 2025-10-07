@@ -23,65 +23,22 @@ const app = express();
 // Connect to database
 connectDatabase();
 
-// Security middleware with Swagger-friendly CSP
+// Security middleware - configured for HTTP servers and Swagger UI
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      baseUri: ["'self'"],
-      fontSrc: ["'self'", "https:", "data:"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "https:", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
-    },
-  },
-  crossOriginEmbedderPolicy: false,
-  crossOriginOpenerPolicy: { policy: "same-origin" },
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  contentSecurityPolicy: false, // Disable CSP to allow Swagger UI to load
+  crossOriginOpenerPolicy: false, // Disable COOP for HTTP compatibility
+  crossOriginEmbedderPolicy: false, // Disable COEP for HTTP compatibility
 }));
 
-// CORS configuration for production
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-
-    // Allow localhost and your production domain
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'https://localhost:3000',
-      'https://localhost:3001',
-      process.env.FRONTEND_URL,
-      process.env.API_URL
-    ].filter(Boolean);
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    // For production, you might want to be more restrictive
-    if (process.env.NODE_ENV === 'production') {
-      const allowedProductionOrigins = [
-        'https://yourdomain.com',
-        'https://www.yourdomain.com'
-      ];
-      if (allowedProductionOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error('Not allowed by CORS'));
-    }
-
-    return callback(null, true);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  exposedHeaders: ['X-Total-Count', 'X-Page-Count']
-};
-
-app.use(cors(corsOptions));
+// CORS configuration - Allow all origins
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: "*",
+    credentials: false,
+  })
+);
 
 // Logging middleware
 app.use(
@@ -99,28 +56,7 @@ app.use(compression());
 
 // Swagger documentation setup
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
-
-// Swagger UI options for production
-const swaggerUiOptions = {
-  customCss: `
-    .swagger-ui .topbar { display: none }
-    .swagger-ui .info .title { color: #3b82f6; }
-  `,
-  customSiteTitle: "NTC Bus Tracking API Documentation",
-  customfavIcon: "/favicon.ico",
-  swaggerOptions: {
-    persistAuthorization: true,
-    displayRequestDuration: true,
-    docExpansion: 'none',
-    filter: true,
-    showExtensions: true,
-    showCommonExtensions: true,
-    tryItOutEnabled: true
-  }
-};
-
-// Serve Swagger UI with proper configuration
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs, swaggerUiOptions));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Health check endpoint
 app.get("/health", (req, res) => {
@@ -131,7 +67,7 @@ app.get("/health", (req, res) => {
   });
 });
 
-// Favicon endpoint for Swagger UI
+// Favicon endpoint
 app.get("/favicon.ico", (req, res) => {
   res.status(204).end();
 });
@@ -157,3 +93,4 @@ app.use("/api/v1/locations", locationRoutes);
 app.use(errorHandler);
 
 module.exports = app;
+
