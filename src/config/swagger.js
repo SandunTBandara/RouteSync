@@ -16,6 +16,10 @@ const swaggerOptions = {
         url: `http://localhost:${process.env.PORT || 3000}/api/v1`,
         description: "Development server",
       },
+      {
+        url: `http://api.route-sync.top/api/v1`,
+        description: "Production server",
+      },
     ],
     components: {
       securitySchemes: {
