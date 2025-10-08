@@ -196,36 +196,7 @@ const logout = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get current logged in user
- * @route   GET /api/v1/auth/me
- * @access  Private
- */
-const getMe = async (req, res) => {
-  try {
-    const user = await userService.getUserProfile(req.user.id);
-
-    res.status(200).json({
-      success: true,
-      data: user,
-    });
-  } catch (error) {
-    logger.error("Get user profile error:", error);
-
-    if (error.message === "User not found") {
-      return res.status(404).json({
-        success: false,
-        message: error.message,
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: "Server error fetching user profile",
-    });
-  }
-};
-
+// /**
 /**
  * @desc    Update user profile
  * @route   PUT /api/v1/auth/me
@@ -320,7 +291,6 @@ module.exports = {
   login,
   refreshToken,
   logout,
-  getMe,
   updateProfile,
   changePassword,
 };

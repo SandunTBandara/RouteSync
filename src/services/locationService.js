@@ -92,11 +92,12 @@ class LocationService {
    */
   async getBusLocation(busId, user = null, date = null) {
     // Check access permissions
-    if (user) {
-      if (
-        user.role === "driver" &&
-        (!user.assignedBusId || user.assignedBusId.toString() !== busId)
-      ) {
+    if (user && user.role === "bus_operator") {
+      // For bus operators, check if they are assigned to this specific bus
+      const Bus = require("../models/Bus");
+      const bus = await Bus.findById(busId);
+
+      if (!bus || bus.operatorId.toString() !== user._id.toString()) {
         throw new Error(
           "Access denied. You can only access your assigned bus location."
         );
@@ -199,26 +200,14 @@ class LocationService {
     const { limit = 50, startDate, endDate, page = 1 } = filters;
 
     // Check access permissions
-    if (user) {
-      if (
-        user.role === "driver" &&
-        (!user.assignedBusId || user.assignedBusId.toString() !== busId)
-      ) {
+    if (user && user.role === "bus_operator") {
+      // For bus operators, check if they are assigned to this specific bus
+      const bus = await Bus.findById(busId);
+
+      if (!bus || bus.operatorId.toString() !== user._id.toString()) {
         throw new Error(
           "Access denied. You can only access your assigned bus location history."
         );
-      }
-
-      if (user.role === "operator") {
-        const bus = await Bus.findOne({
-          _id: busId,
-          operatorId: user.operatorId,
-        });
-        if (!bus) {
-          throw new Error(
-            "Access denied. Bus not found in your operator fleet."
-          );
-        }
       }
     }
 
@@ -352,26 +341,14 @@ class LocationService {
    */
   async getBusLocationStats(busId, user = null) {
     // Check access permissions
-    if (user) {
-      if (
-        user.role === "driver" &&
-        (!user.assignedBusId || user.assignedBusId.toString() !== busId)
-      ) {
+    if (user && user.role === "bus_operator") {
+      // For bus operators, check if they are assigned to this specific bus
+      const bus = await Bus.findById(busId);
+
+      if (!bus || bus.operatorId.toString() !== user._id.toString()) {
         throw new Error(
           "Access denied. You can only access your assigned bus statistics."
         );
-      }
-
-      if (user.role === "operator") {
-        const bus = await Bus.findOne({
-          _id: busId,
-          operatorId: user.operatorId,
-        });
-        if (!bus) {
-          throw new Error(
-            "Access denied. Bus not found in your operator fleet."
-          );
-        }
       }
     }
 

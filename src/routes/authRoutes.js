@@ -4,7 +4,6 @@ const {
   login,
   refreshToken,
   logout,
-  getMe,
   updateProfile,
   changePassword,
 } = require("../controllers/authController");
@@ -257,33 +256,6 @@ router.post("/refresh", validateRefreshToken, refreshToken);
  *         description: Server error
  */
 router.post("/logout", protect, logout);
-
-/**
- * @swagger
- * /auth/me:
- *   get:
- *     summary: Get current user profile
- *     tags: [Authentication]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: User profile retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   $ref: '#/components/schemas/User'
- *       401:
- *         description: Authentication required
- *       500:
- *         description: Server error
- */
-router.get("/me", protect, getMe);
 
 /**
  * @swagger

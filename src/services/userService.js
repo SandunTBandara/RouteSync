@@ -132,10 +132,7 @@ class UserService {
    * Get user profile by ID
    */
   async getUserProfile(userId) {
-    const user = await User.findById(userId).populate(
-      "assignedBusId",
-      "busNumber routeId"
-    );
+    const user = await User.findById(userId);
 
     if (!user) {
       throw new Error("User not found");
@@ -241,10 +238,7 @@ class UserService {
    * Get user by ID (Admin function)
    */
   async getUserById(userId) {
-    const user = await User.findById(userId).populate(
-      "assignedBusId",
-      "busNumber routeId"
-    );
+    const user = await User.findById(userId);
 
     if (!user) {
       throw new Error("User not found");
@@ -257,8 +251,7 @@ class UserService {
    * Update user by admin
    */
   async updateUserByAdmin(userId, updateData, adminUserId) {
-    const { firstName, lastName, phone, role, assignedBusId, isActive } =
-      updateData;
+    const { firstName, lastName, phone, role, isActive } = updateData;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -273,7 +266,6 @@ class UserService {
         lastName,
         phone,
         role,
-        assignedBusId,
         isActive,
       },
       { new: true, runValidators: true }

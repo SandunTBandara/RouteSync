@@ -5,7 +5,7 @@ require("dotenv").config();
 // Configuration
 const CONFIG = {
   API_BASE_URL: process.env.API_BASE_URL || "http://localhost:3000/api/v1",
-  BUS_ID: "68e3eacb298d04eae5197d71", // Your specific bus ID
+  BUS_ID: "68e3eacb298d04eae5197d71", // Your specific bus ID (now properly configured with route and operator)
   UPDATE_INTERVAL: "*/1 * * * *", // Every 1 minutes
   ADMIN_EMAIL: "testadmin@busroute.com",
   ADMIN_PASSWORD: "admin123",

@@ -540,7 +540,8 @@ router.get("/bus-operators/:id", getBusOperatorById);
  *                 maxLength: 50
  *               phone:
  *                 type: string
- *                 pattern: '^\\+94\\d{9}$'
+ *                 description: Admin phone number
+ *                 example: "+94771234567"
  *               isActive:
  *                 type: boolean
  *     responses:
