@@ -337,69 +337,6 @@ class LocationService {
   }
 
   /**
-   * Get location statistics for a bus
-   */
-  async getBusLocationStats(busId, user = null) {
-    // Check access permissions
-    if (user && user.role === "bus_operator") {
-      // For bus operators, check if they are assigned to this specific bus
-      const bus = await Bus.findById(busId);
-
-      if (!bus || bus.operatorId.toString() !== user._id.toString()) {
-        throw new Error(
-          "Access denied. You can only access your assigned bus statistics."
-        );
-      }
-    }
-
-    const stats = await Location.aggregate([
-      { $match: { busId: require("mongoose").Types.ObjectId(busId) } },
-      {
-        $group: {
-          _id: null,
-          totalRecords: { $sum: 1 },
-          avgSpeed: { $avg: "$speed" },
-          maxSpeed: { $max: "$speed" },
-          firstRecord: { $min: "$timestamp" },
-          lastRecord: { $max: "$timestamp" },
-        },
-      },
-    ]);
-
-    // Get daily location counts for the last 30 days
-    const dailyStats = await Location.aggregate([
-      {
-        $match: {
-          busId: require("mongoose").Types.ObjectId(busId),
-          timestamp: {
-            $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-          },
-        },
-      },
-      {
-        $group: {
-          _id: {
-            $dateToString: {
-              format: "%Y-%m-%d",
-              date: "$timestamp",
-            },
-          },
-          count: { $sum: 1 },
-          avgSpeed: { $avg: "$speed" },
-        },
-      },
-      {
-        $sort: { _id: 1 },
-      },
-    ]);
-
-    return {
-      overall: stats[0] || {},
-      dailyStats,
-    };
-  }
-
-  /**
    * Delete old location records (cleanup function)
    */
   async cleanupOldLocations(daysToKeep = 90) {

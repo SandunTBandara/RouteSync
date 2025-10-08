@@ -258,28 +258,4 @@ router.get(
   locationController.getAllActiveBusLocations
 );
 
-/**
- * @swagger
- * /locations/bus/{busId}/stats:
- *   get:
- *     summary: Get location statistics for a bus
- *     tags: [Locations]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - name: busId
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Bus location statistics retrieved successfully
- */
-router.get(
-  "/bus/:busId/stats",
-  protect,
-  locationController.getBusLocationStats
-);
-
 module.exports = router;

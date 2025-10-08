@@ -316,42 +316,6 @@ const getBusesNearLocation = async (req, res) => {
   }
 };
 
-/**
- * Get location statistics for a bus
- * GET /api/locations/bus/:busId/stats
- */
-const getBusLocationStats = async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: errors.array(),
-      });
-    }
-
-    const { busId } = req.params;
-
-    const stats = await locationService.getBusLocationStats(busId, req.user);
-
-    res.json({
-      success: true,
-      message: "Bus location statistics retrieved successfully",
-      data: {
-        busId,
-        ...stats,
-      },
-    });
-  } catch (error) {
-    console.error("Error getting bus location stats:", error);
-    res.status(error.message.includes("not found") ? 404 : 500).json({
-      success: false,
-      message: error.message || "Failed to get bus location statistics",
-    });
-  }
-};
-
 module.exports = {
   getLocationsByBusAndDate,
   updateBusLocation,
@@ -359,5 +323,4 @@ module.exports = {
   getBusLocationHistory,
   getAllActiveBusLocations,
   getBusesNearLocation,
-  getBusLocationStats,
 };
