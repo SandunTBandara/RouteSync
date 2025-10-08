@@ -135,15 +135,38 @@ const getLatestBusLocation = async (req, res) => {
     }
 
     const { busId } = req.params;
+    const { date } = req.query;
+
+    // Validate date format if provided
+    if (date) {
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(date)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid date format. Please use YYYY-MM-DD format.",
+        });
+      }
+
+      const parsedDate = new Date(date);
+      if (isNaN(parsedDate.getTime())) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid date. Please provide a valid date.",
+        });
+      }
+    }
 
     const latestLocation = await locationService.getBusLocation(
       busId,
-      req.user
+      req.user,
+      date
     );
 
     res.json({
       success: true,
-      message: "Latest bus location retrieved successfully",
+      message: date
+        ? `Latest bus location for ${date} retrieved successfully`
+        : "Latest bus location retrieved successfully",
       data: {
         busId,
         location: latestLocation,
@@ -155,6 +178,7 @@ const getLatestBusLocation = async (req, res) => {
         heading: latestLocation.heading,
         timestamp: latestLocation.timestamp,
         lastUpdated: latestLocation.updatedAt,
+        requestedDate: date || null,
       },
     });
   } catch (error) {

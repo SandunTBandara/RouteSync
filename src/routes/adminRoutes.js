@@ -315,10 +315,7 @@ router.get("/users/:id", getUserById);
  *                 type: string
  *               role:
  *                 type: string
- *                 enum: [admin, user]
- *                 type: string
- *               assignedBusId:
- *                 type: string
+ *                 enum: [admin, user, bus_operator]
  *               isActive:
  *                 type: boolean
  *     responses:
@@ -543,7 +540,8 @@ router.get("/bus-operators/:id", getBusOperatorById);
  *                 maxLength: 50
  *               phone:
  *                 type: string
- *                 pattern: '^\\+94\\d{9}$'
+ *                 description: Admin phone number
+ *                 example: "+94771234567"
  *               isActive:
  *                 type: boolean
  *     responses:

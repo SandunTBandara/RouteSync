@@ -150,9 +150,55 @@ router.put("/bus/:busId/update", protect, locationController.updateBusLocation);
  *         required: true
  *         schema:
  *           type: string
+ *         description: Bus ID to get location for
+ *       - name: date
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Date to get latest location for (YYYY-MM-DD). If not provided, returns overall latest location.
+ *         example: "2025-10-08"
  *     responses:
  *       200:
  *         description: Latest bus location retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     busId:
+ *                       type: string
+ *                     location:
+ *                       type: object
+ *                     coordinates:
+ *                       type: object
+ *                       properties:
+ *                         longitude:
+ *                           type: number
+ *                         latitude:
+ *                           type: number
+ *                     speed:
+ *                       type: number
+ *                     heading:
+ *                       type: number
+ *                     timestamp:
+ *                       type: string
+ *                       format: date-time
+ *                     lastUpdated:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Invalid date format or validation error
+ *       404:
+ *         description: No location found for the specified bus and date
  */
 router.get(
   "/bus/:busId/latest",

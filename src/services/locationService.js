@@ -90,20 +90,37 @@ class LocationService {
   /**
    * Get location for a specific bus
    */
-  async getBusLocation(busId, user = null) {
+  async getBusLocation(busId, user = null, date = null) {
     // Check access permissions
-    if (user) {
-      if (
-        user.role === "driver" &&
-        (!user.assignedBusId || user.assignedBusId.toString() !== busId)
-      ) {
+    if (user && user.role === "bus_operator") {
+      // For bus operators, check if they are assigned to this specific bus
+      const Bus = require("../models/Bus");
+      const bus = await Bus.findById(busId);
+
+      if (!bus || bus.operatorId.toString() !== user._id.toString()) {
         throw new Error(
           "Access denied. You can only access your assigned bus location."
         );
       }
     }
 
-    const location = await Location.findOne({ busId })
+    let query = { busId };
+
+    // If date is provided, filter by that specific date
+    if (date) {
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      query.timestamp = {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      };
+    }
+
+    const location = await Location.findOne(query)
       .sort({ timestamp: -1 })
       .populate({
         path: "busId",
@@ -117,7 +134,10 @@ class LocationService {
       });
 
     if (!location) {
-      throw new Error("Location not found for this bus");
+      const errorMessage = date
+        ? `No location found for this bus on ${date}`
+        : "Location not found for this bus";
+      throw new Error(errorMessage);
     }
 
     return location;
@@ -180,26 +200,14 @@ class LocationService {
     const { limit = 50, startDate, endDate, page = 1 } = filters;
 
     // Check access permissions
-    if (user) {
-      if (
-        user.role === "driver" &&
-        (!user.assignedBusId || user.assignedBusId.toString() !== busId)
-      ) {
+    if (user && user.role === "bus_operator") {
+      // For bus operators, check if they are assigned to this specific bus
+      const bus = await Bus.findById(busId);
+
+      if (!bus || bus.operatorId.toString() !== user._id.toString()) {
         throw new Error(
           "Access denied. You can only access your assigned bus location history."
         );
-      }
-
-      if (user.role === "operator") {
-        const bus = await Bus.findOne({
-          _id: busId,
-          operatorId: user.operatorId,
-        });
-        if (!bus) {
-          throw new Error(
-            "Access denied. Bus not found in your operator fleet."
-          );
-        }
       }
     }
 
@@ -333,26 +341,14 @@ class LocationService {
    */
   async getBusLocationStats(busId, user = null) {
     // Check access permissions
-    if (user) {
-      if (
-        user.role === "driver" &&
-        (!user.assignedBusId || user.assignedBusId.toString() !== busId)
-      ) {
+    if (user && user.role === "bus_operator") {
+      // For bus operators, check if they are assigned to this specific bus
+      const bus = await Bus.findById(busId);
+
+      if (!bus || bus.operatorId.toString() !== user._id.toString()) {
         throw new Error(
           "Access denied. You can only access your assigned bus statistics."
         );
-      }
-
-      if (user.role === "operator") {
-        const bus = await Bus.findOne({
-          _id: busId,
-          operatorId: user.operatorId,
-        });
-        if (!bus) {
-          throw new Error(
-            "Access denied. Bus not found in your operator fleet."
-          );
-        }
       }
     }
 

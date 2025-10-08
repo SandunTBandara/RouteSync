@@ -172,7 +172,11 @@ const updateUser = async (req, res) => {
       });
     }
 
-    const updatedUser = await userService.updateUser(req.params.id, req.body);
+    const updatedUser = await userService.updateUserByAdmin(
+      req.params.id,
+      req.body,
+      req.user.id
+    );
 
     res.status(200).json({
       success: true,
@@ -403,7 +407,11 @@ const updateBusOperator = async (req, res) => {
       role: "bus_operator",
     };
 
-    const operator = await userService.updateUser(req.params.id, updateData);
+    const operator = await userService.updateUserByAdmin(
+      req.params.id,
+      updateData,
+      req.user.id
+    );
 
     res.status(200).json({
       success: true,

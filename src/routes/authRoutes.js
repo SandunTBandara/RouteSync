@@ -4,7 +4,6 @@ const {
   login,
   refreshToken,
   logout,
-  getMe,
   updateProfile,
   changePassword,
 } = require("../controllers/authController");
@@ -54,12 +53,8 @@ const router = express.Router();
  *           description: User's phone number
  *         role:
  *           type: string
- *           enum: [admin, user]
+ *           enum: [admin, user, bus_operator]
  *           description: User role
-
- *         assignedBusId:
- *           type: string
- *           description: Assigned bus ID (for driver role)
  *         isActive:
  *           type: boolean
  *           description: Account status
@@ -112,12 +107,8 @@ const router = express.Router();
  *           pattern: '^\+94\d{9}$'
  *         role:
  *           type: string
- *           enum: [admin, user]
+ *           enum: [admin, user, bus_operator]
  *           default: user
-
- *         assignedBusId:
- *           type: string
- *           description: Required for driver role
  *
  *     AuthResponse:
  *       type: object
@@ -265,33 +256,6 @@ router.post("/refresh", validateRefreshToken, refreshToken);
  *         description: Server error
  */
 router.post("/logout", protect, logout);
-
-/**
- * @swagger
- * /auth/me:
- *   get:
- *     summary: Get current user profile
- *     tags: [Authentication]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: User profile retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   $ref: '#/components/schemas/User'
- *       401:
- *         description: Authentication required
- *       500:
- *         description: Server error
- */
-router.get("/me", protect, getMe);
 
 /**
  * @swagger
