@@ -13,12 +13,12 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `http://localhost:${process.env.PORT || 3000}/api/v1`,
+        url: `http://api.route-sync.top/api/v1`,
         description: "Development server",
       },
       {
-        url: process.env.API_URL || `https://${process.env.HOST || 'localhost'}:${process.env.PORT || 3000}/api/v1`,
-        description: "Production server",
+	url: `http://localhost:3000/api/v1`,
+        description: "Development server",
       },
     ],
     components: {
