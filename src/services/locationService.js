@@ -90,7 +90,7 @@ class LocationService {
   /**
    * Get location for a specific bus
    */
-  async getBusLocation(busId, user = null) {
+  async getBusLocation(busId, user = null, date = null) {
     // Check access permissions
     if (user) {
       if (
@@ -103,7 +103,23 @@ class LocationService {
       }
     }
 
-    const location = await Location.findOne({ busId })
+    let query = { busId };
+
+    // If date is provided, filter by that specific date
+    if (date) {
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      query.timestamp = {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      };
+    }
+
+    const location = await Location.findOne(query)
       .sort({ timestamp: -1 })
       .populate({
         path: "busId",
@@ -117,7 +133,10 @@ class LocationService {
       });
 
     if (!location) {
-      throw new Error("Location not found for this bus");
+      const errorMessage = date
+        ? `No location found for this bus on ${date}`
+        : "Location not found for this bus";
+      throw new Error(errorMessage);
     }
 
     return location;

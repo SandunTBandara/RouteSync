@@ -315,10 +315,7 @@ router.get("/users/:id", getUserById);
  *                 type: string
  *               role:
  *                 type: string
- *                 enum: [admin, user]
- *                 type: string
- *               assignedBusId:
- *                 type: string
+ *                 enum: [admin, user, bus_operator]
  *               isActive:
  *                 type: boolean
  *     responses:

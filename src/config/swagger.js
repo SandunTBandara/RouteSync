@@ -65,9 +65,8 @@ const swaggerOptions = {
             phone: { type: "string" },
             role: {
               type: "string",
-              enum: ["admin", "user"],
+              enum: ["admin", "user", "bus_operator"],
             },
-            assignedBusId: { type: "string" },
             isActive: { type: "boolean" },
             lastLogin: { type: "string", format: "date-time" },
           },
